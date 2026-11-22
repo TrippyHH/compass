@@ -19,6 +19,7 @@ function fixture(t) {
     path.join(root, "scripts/workspace-filters.mjs"),
     path.join(dir, "scripts/workspace-filters.mjs"),
   );
+  copyFileSync(path.join(root, "scripts/pnpm-spawn.mjs"), path.join(dir, "scripts/pnpm-spawn.mjs"));
   symlinkSync(process.execPath, path.join(dir, "bin/node"));
   writeFileSync(path.join(dir, ".env"), "COMPASS_TASK_TEST_SECRET=local-only\n");
   writeFileSync(path.join(dir, "bin/pnpm"), "#!/usr/bin/env node\nconsole.log('11.3.0');\n", {
@@ -161,26 +162,30 @@ else {
     { mode: 0o755 },
   );
   const input = "synthetic-pipe-input\n";
-  const result = spawnSync(
-    process.execPath,
-    [
-      "scripts/tasks.mjs",
-      "db:manage",
-      "-F",
-      "maintenance",
-      "--",
-      "create-user",
-      "--password-stdin",
-    ],
-    { cwd: dir, env: { ...process.env, PATH: path.join(dir, "bin") }, input, encoding: "utf8" },
-  );
-  assert.equal(result.status, 0, result.stderr);
-  assert.ok(!result.stdout.includes(input.trim()));
-  assert.deepEqual(JSON.parse(result.stdout), {
+  const expected = {
     args: ["--filter", "@probe/maintenance", "run", "db:manage", "create-user", "--password-stdin"],
     bytes: Buffer.byteLength(input),
     secret: "local-only",
-  });
+  };
+  // pnpm 11 drops the explicit "--" separator, so both spellings must reach the app.
+  for (const separator of [["--"], []]) {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "scripts/tasks.mjs",
+        "db:manage",
+        "-F",
+        "maintenance",
+        ...separator,
+        "create-user",
+        "--password-stdin",
+      ],
+      { cwd: dir, env: { ...process.env, PATH: path.join(dir, "bin") }, input, encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(!result.stdout.includes(input.trim()));
+    assert.deepEqual(JSON.parse(result.stdout), expected);
+  }
 });
 
 test("offline data tool checks include canonical SQL and keep database acceptance uncached", () => {

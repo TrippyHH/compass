@@ -5,6 +5,8 @@ import { devNull } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { pnpmSpawnSync } from "./pnpm-spawn.mjs";
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const apps = ["home", "web", "agent", "memory", "worker"];
 const actions = ["up", "status", "logs", "down"];
@@ -69,13 +71,15 @@ async function assertPortFree(port) {
 }
 
 function execute(command, args, { capture = false, env = process.env, timeout = 1200000 } = {}) {
-  const result = spawnSync(command, args, {
+  const options = {
     cwd: root,
     env,
     encoding: "utf8",
     stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit",
     timeout,
-  });
+  };
+  const result =
+    command === "pnpm" ? pnpmSpawnSync(args, options) : spawnSync(command, args, options);
   if (result.error || result.status !== 0)
     throw new Error(
       `${command} ${args.join(" ")} failed${result.error ? `: ${result.error.message}` : ` (exit ${result.status})`}${capture && result.stderr ? `\n${result.stderr.trim()}` : ""}`,

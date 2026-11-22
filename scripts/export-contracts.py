@@ -12,5 +12,7 @@ for name, schema in [
     ("demo-overview.schema.json", DemoOverview.model_json_schema()),
 ]:
     (output / name).write_text(
-        json.dumps(schema, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+        json.dumps(schema, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )

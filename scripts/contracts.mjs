@@ -4,10 +4,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { pnpmSpawnSync } from "./pnpm-spawn.mjs";
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temp = mkdtempSync(path.join(tmpdir(), "compass-contracts-"));
 function run(cmd, args) {
-  const result = spawnSync(cmd, args, { cwd: root, stdio: "inherit" });
+  const options = { cwd: root, stdio: "inherit" };
+  const result = cmd === "pnpm" ? pnpmSpawnSync(args, options) : spawnSync(cmd, args, options);
   if (result.status !== 0) throw new Error(`Contract command failed: ${cmd}`);
 }
 try {

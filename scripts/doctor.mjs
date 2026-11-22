@@ -1,5 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+
+import { pnpmSpawnSync } from "./pnpm-spawn.mjs";
 const checks = [
   ["node", ["--version"]],
   ["pnpm", ["--version"]],
@@ -9,7 +11,10 @@ const checks = [
 ];
 let failed = false;
 for (const [cmd, args] of checks) {
-  const result = spawnSync(cmd, args, { encoding: "utf8", timeout: 15000 });
+  const result =
+    cmd === "pnpm"
+      ? pnpmSpawnSync(args, { encoding: "utf8", timeout: 15000 })
+      : spawnSync(cmd, args, { encoding: "utf8", timeout: 15000 });
   const ok = result.status === 0;
   console.log(
     `${ok ? "OK" : "FAIL"} ${cmd} ${args.join(" ")}: ${ok ? result.stdout.trim() : "unavailable"}`,

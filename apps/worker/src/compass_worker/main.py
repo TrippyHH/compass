@@ -13,13 +13,20 @@ async def serve() -> None:
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     signals = (signal.SIGINT, signal.SIGTERM)
+    loop_handlers: list[int] = []
     for sig in signals:
-        loop.add_signal_handler(sig, stop.set)
+        try:
+            loop.add_signal_handler(sig, stop.set)
+        except NotImplementedError:
+            # Windows event loops lack add_signal_handler; plain handlers still work.
+            signal.signal(sig, lambda *_: loop.call_soon_threadsafe(stop.set))
+        else:
+            loop_handlers.append(sig)
     try:
         logger.info("Worker scaffold ready; no task consumers configured")
         await stop.wait()
     finally:
-        for sig in signals:
+        for sig in loop_handlers:
             loop.remove_signal_handler(sig)
         logger.info("Worker stopped")
 

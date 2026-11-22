@@ -1,7 +1,8 @@
-import { spawnSync, spawn } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { pnpmSpawnSync, toolSpawn } from "./pnpm-spawn.mjs";
 import { resolveWorkspaceFilters, workspacePackages } from "./workspace-filters.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -29,14 +30,21 @@ if (runtime && existsSync(path.join(root, ".env"))) {
   process.loadEnvFile(path.join(root, ".env"));
 }
 function version(command, optional = false) {
-  const result = spawnSync(command, ["--version"], { encoding: "utf8" });
+  const result =
+    command === "pnpm"
+      ? pnpmSpawnSync(["--version"], { encoding: "utf8" })
+      : spawnSync(command, ["--version"], { encoding: "utf8" });
   if (result.status !== 0) {
     if (optional) return "unavailable";
     throw new Error(`Missing tool: ${command}`);
   }
   return result.stdout.trim();
 }
-const turbo = path.join(root, "node_modules/.bin/turbo");
+const turbo = path.join(
+  root,
+  "node_modules/.bin",
+  process.platform === "win32" ? "turbo.cmd" : "turbo",
+);
 if (!existsSync(turbo)) throw new Error("Run pnpm install --frozen-lockfile before tasks");
 const env = { ...process.env };
 // Runtime tasks are uncached. Missing Python tools must not block a Node-only task.
@@ -60,22 +68,25 @@ const interactive =
   JSON.parse(readFileSync(configPath, "utf8")).tasks?.[task]?.interactive === true;
 let command = turbo,
   forwarded = ["run", ...args];
+// The filter may be followed by app arguments; pnpm 11 drops the explicit "--"
+// separator, so both "task -F app -- args" and "task -F app args" are accepted.
+let selector;
+let forwardArgs = separator < 0 ? [] : args.slice(separator + 1);
 if (interactive && !taskArgs.some((arg) => arg.startsWith("--dry"))) {
-  let selector;
-  if (taskArgs.length === 3 && ["-F", "--filter"].includes(taskArgs[1])) selector = taskArgs[2];
-  else if (taskArgs.length === 2) selector = taskArgs[1].match(/^(?:--filter=|-F=?)(.+)$/)?.[1];
+  if (["-F", "--filter"].includes(taskArgs[1])) {
+    selector = taskArgs[2];
+    if (separator < 0) forwardArgs = taskArgs.slice(3);
+  } else {
+    const match = taskArgs[1]?.match(/^(?:--filter=|-F=?)(.+)$/);
+    selector = match?.[1];
+    if (separator < 0) forwardArgs = taskArgs.slice(2);
+  }
   if (!selector || !workspacePackages(root).some((pkg) => pkg.name === selector))
     throw new Error("Interactive tasks require exactly one explicit workspace filter.");
   command = "pnpm";
-  forwarded = [
-    "--filter",
-    selector,
-    "run",
-    task,
-    ...(separator < 0 ? [] : args.slice(separator + 1)),
-  ];
+  forwarded = ["--filter", selector, "run", task, ...forwardArgs];
 }
-const child = spawn(command, forwarded, { cwd: root, stdio: "inherit", env });
+const child = toolSpawn(command, forwarded, { cwd: root, stdio: "inherit", env });
 for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => child.kill(signal));
 child.on("error", (error) => {
   console.error(error.message);

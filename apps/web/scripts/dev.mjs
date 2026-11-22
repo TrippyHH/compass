@@ -21,25 +21,42 @@ function lsof(args) {
     throw error;
   }
 }
-const pids = new Set(
-  lsof(["-t", `-iTCP:${port}`, "-sTCP:LISTEN"])
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(Number),
-);
-// Next also locks its output directory, even when the old instance uses another port.
-for (const line of execFileSync("ps", ["-axo", "pid=,comm="], { encoding: "utf8" }).split("\n")) {
-  const match = line.trim().match(/^(\d+)\s+.*next-server/);
-  if (!match) continue;
-  const pid = Number(match[1]);
-  if (
-    lsof(["-a", "-p", String(pid), "-d", "cwd", "-Fn"])
-      .split("\n")
-      .includes(`n${directory}`)
-  )
-    pids.add(pid);
+function listeners() {
+  if (process.platform !== "win32")
+    return new Set(
+      lsof(["-t", `-iTCP:${port}`, "-sTCP:LISTEN"])
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(Number),
+    );
+  // Windows has no lsof; read the listening socket owners from netstat instead.
+  const owners = new Set();
+  const suffix = `:${port}`;
+  const output = execFileSync("netstat", ["-ano", "-p", "TCP"], { encoding: "utf8" });
+  for (const line of output.split("\n")) {
+    const columns = line.trim().split(/\s+/);
+    if (columns.length < 5 || columns[3] !== "LISTENING" || !columns[1].endsWith(suffix)) continue;
+    const pid = Number(columns[4]);
+    if (pid > 0) owners.add(pid);
+  }
+  return owners;
 }
+const pids = listeners();
+// Next also locks its output directory, even when the old instance uses another port.
+// Resolving a foreign process cwd needs lsof, so this pass stays POSIX-only.
+if (process.platform !== "win32")
+  for (const line of execFileSync("ps", ["-axo", "pid=,comm="], { encoding: "utf8" }).split("\n")) {
+    const match = line.trim().match(/^(\d+)\s+.*next-server/);
+    if (!match) continue;
+    const pid = Number(match[1]);
+    if (
+      lsof(["-a", "-p", String(pid), "-d", "cwd", "-Fn"])
+        .split("\n")
+        .includes(`n${directory}`)
+    )
+      pids.add(pid);
+  }
 function alive(pid) {
   try {
     process.kill(pid, 0);

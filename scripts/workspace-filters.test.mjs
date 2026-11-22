@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { pnpmSpawnSync } from "./pnpm-spawn.mjs";
 import { resolveWorkspaceFilters, workspacePackages } from "./workspace-filters.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -146,7 +146,7 @@ test("every current app follows the short-name launch convention", () => {
       JSON.parse(readFileSync(path.join(pkg.path, "package.json"), "utf8")).scripts?.dev,
       `${pkg.name}: dev script is required`,
     );
-    const result = spawnSync("pnpm", ["dev", "-F", name, "--dry-run=json"], {
+    const result = pnpmSpawnSync(["dev", "-F", name, "--dry-run=json"], {
       cwd: root,
       encoding: "utf8",
     });
