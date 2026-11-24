@@ -888,8 +888,7 @@ function ModelTestPanel({ provider, onClose }: { provider: ProviderView; onClose
   const stopRef = useRef<{ abort(): void } | null>(null);
 
   const capabilityBlocked = useMemo(() => {
-    if (!stream) return "";
-    if (decision) return "决策调用固定为非流式。";
+    if (decision || !stream) return "";
     return provider.capabilities.stream.state === "supported"
       ? ""
       : "当前模型不支持流式输出，请关闭流式再测试。";
@@ -1111,6 +1110,7 @@ function ModelTestPanel({ provider, onClose }: { provider: ProviderView; onClose
                 />
                 <small>支持 choice、noul、score；问题数上限 16。</small>
               </label>
+              <p className="notice">决策调用固定为非流式。</p>
             </>
           ) : (
             <>
