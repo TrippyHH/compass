@@ -142,3 +142,7 @@ build/
 .cache/
 !/.agents/rules/
 !/.agents/rules/AGENTS.md
+.idea/
+# Local test and package-store artifacts.
+pytest-cache-files-*/
+.pnpm-store/

@@ -55,10 +55,461 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/models/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Available */
+        get: operations["available_v1_models_available_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chat Call */
+        post: operations["chat_call_v1_models_calls_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/calls/{call_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Call Record */
+        get: operations["call_record_v1_models_calls__call_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catalog */
+        get: operations["catalog_v1_models_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/operations/{operation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operation */
+        get: operations["operation_v1_models_operations__operation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Providers */
+        get: operations["providers_v1_models_providers_get"];
+        put?: never;
+        /** Create Provider */
+        post: operations["create_provider_v1_models_providers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/providers/{provider_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provider */
+        get: operations["provider_v1_models_providers__provider_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Provider */
+        patch: operations["patch_provider_v1_models_providers__provider_id__patch"];
+        trace?: never;
+    };
+    "/v1/models/providers/{provider_id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Changes */
+        get: operations["changes_v1_models_providers__provider_id__changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/providers/{provider_id}/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test Provider */
+        post: operations["test_provider_v1_models_providers__provider_id__tests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/models/test-calls/{call_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Test Record */
+        get: operations["test_record_v1_models_test_calls__call_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AvailableModel */
+        AvailableModel: {
+            /** Alias */
+            alias: string;
+            /** Api Model */
+            api_model: string;
+            capabilities: components["schemas"]["ModelCapabilities"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "llm";
+        };
+        /** AvailableModels */
+        AvailableModels: {
+            /** Items */
+            items: components["schemas"]["AvailableModel"][];
+        };
+        /** CallRecordView */
+        CallRecordView: {
+            /** Binding Version */
+            binding_version: number;
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            /** Config Version */
+            config_version: number;
+            /** Duration Ms */
+            duration_ms: number | null;
+            /** Error Code */
+            error_code: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "test" | "chat";
+            /** Requested Model */
+            requested_model: string;
+            /** Response Model */
+            response_model: string | null;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "completed" | "failed" | "canceled" | "incomplete";
+            /** Upstream Outcome Unknown */
+            upstream_outcome_unknown: boolean;
+            usage: components["schemas"]["ModelUsage"];
+        };
+        /** CallResponse */
+        CallResponse: {
+            /** Answers */
+            answers?: {
+                [key: string]: components["schemas"]["DecisionAnswer"];
+            } | null;
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            /** Config Version */
+            config_version: number;
+            /** Continuation Token */
+            continuation_token?: string | null;
+            /** Duration Ms */
+            duration_ms: number;
+            /** Error Code */
+            error_code?: string | null;
+            /** Finish Reason */
+            finish_reason?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "generate" | "decision";
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+            /** Requested Model */
+            requested_model: string;
+            /** Response Model */
+            response_model?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "failed" | "canceled" | "incomplete";
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /** Tool Calls */
+            tool_calls?: components["schemas"]["ToolCall"][];
+            /**
+             * Upstream Outcome Unknown
+             * @default false
+             */
+            upstream_outcome_unknown: boolean;
+            /** Upstream Request Id */
+            upstream_request_id?: string | null;
+            usage?: components["schemas"]["ModelUsage"];
+            validation?: components["schemas"]["OutputValidation"];
+        };
+        /** Capability */
+        Capability: {
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "supported" | "unsupported" | "unknown";
+        };
+        /** CatalogItem */
+        CatalogItem: {
+            /** Adapter Supported */
+            adapter_supported: boolean;
+            /** Api Model */
+            api_model: string;
+            /** Base Url */
+            base_url?: string | null;
+            capabilities: components["schemas"]["ModelCapabilities"];
+            /**
+             * Chat Supported
+             * @default false
+             */
+            chat_supported: boolean;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "llm" | "decision" | "unsupported";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "litellm" | "project_verified" | "systemone";
+            /** Vendor */
+            vendor: string;
+        };
+        /** CatalogPage */
+        CatalogPage: {
+            /** Items */
+            items: components["schemas"]["CatalogItem"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Sdk Version */
+            sdk_version: string;
+            /** Total */
+            total: number;
+        };
+        /** ChatCallInput */
+        ChatCallInput: {
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            input: components["schemas"]["GenerateInput"];
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+        };
+        /** ChatMessage */
+        ChatMessage: {
+            /** Content */
+            content?: string | null;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "system" | "user" | "assistant" | "tool";
+            /** Tool Call Id */
+            tool_call_id?: string | null;
+            /** Tool Calls */
+            tool_calls?: components["schemas"]["ToolCall"][] | null;
+        };
+        /** DecisionAnswer */
+        DecisionAnswer: {
+            /** Choice */
+            choice?: string | null;
+            /** Confidence */
+            confidence?: number | null;
+            /** Legend */
+            legend?: {
+                [key: string]: string | {
+                    [key: string]: unknown;
+                } | unknown[];
+            } | null;
+            /** Noul */
+            noul?: number | null;
+            /** Probabilities */
+            probabilities?: {
+                [key: string]: number;
+            } | null;
+            /** Score */
+            score?: number | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "choice" | "noul" | "score";
+        };
+        /** DecisionInput */
+        DecisionInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "decision";
+            /** Questions */
+            questions: {
+                [key: string]: components["schemas"]["DecisionQuestion"];
+            };
+            /** State */
+            state: string | {
+                [key: string]: unknown;
+            } | unknown[];
+            /**
+             * Stream
+             * @default false
+             * @constant
+             */
+            stream: false;
+        };
+        /** DecisionQuestion */
+        DecisionQuestion: {
+            /** Criteria */
+            criteria?: {
+                [key: string]: string | {
+                    [key: string]: unknown;
+                } | unknown[] | null;
+            } | (string | {
+                [key: string]: unknown;
+            } | unknown[])[] | null;
+            /**
+             * Instructions
+             * @default
+             */
+            instructions: string | {
+                [key: string]: unknown;
+            } | unknown[];
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "choice" | "noul" | "score";
+        };
         /** DemoOverview */
         DemoOverview: {
             /**
@@ -96,6 +547,52 @@ export interface components {
              */
             start_date: string;
         };
+        /** GenerateInput */
+        GenerateInput: {
+            /** Continuation Token */
+            continuation_token?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "generate";
+            /**
+             * Max Tokens
+             * @default 8192
+             */
+            max_tokens: number;
+            /** Messages */
+            messages: components["schemas"]["ChatMessage"][];
+            /**
+             * Output Format
+             * @default text
+             * @enum {string}
+             */
+            output_format: "text" | "json" | "schema";
+            /** Output Schema */
+            output_schema?: {
+                [key: string]: unknown;
+            } | null;
+            /** Reasoning Effort */
+            reasoning_effort?: ("low" | "medium" | "high" | "max") | null;
+            /**
+             * Stream
+             * @default false
+             */
+            stream: boolean;
+            /**
+             * Thinking
+             * @default false
+             */
+            thinking: boolean;
+            /** Tools */
+            tools?: components["schemas"]["ToolDefinition"][];
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** Health */
         Health: {
             /**
@@ -110,6 +607,317 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** ModelCapabilities */
+        ModelCapabilities: {
+            json_output: components["schemas"]["Capability"];
+            /** Reasoning Efforts */
+            reasoning_efforts?: string[];
+            schema_output: components["schemas"]["Capability"];
+            stream: components["schemas"]["Capability"];
+            sync: components["schemas"]["Capability"];
+            thinking: components["schemas"]["Capability"];
+            tools: components["schemas"]["Capability"];
+        };
+        /** ModelChangePage */
+        ModelChangePage: {
+            /** Items */
+            items: components["schemas"]["ModelChangeView"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** ModelChangeView */
+        ModelChangeView: {
+            /**
+             * Actor User Id
+             * Format: uuid
+             */
+            actor_user_id: string;
+            /** After Version */
+            after_version: number;
+            /** Before Version */
+            before_version: number | null;
+            /** Changed Fields */
+            changed_fields: string[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+        };
+        /** ModelUsage */
+        ModelUsage: {
+            /** Input Tokens */
+            input_tokens?: number | null;
+            /** Output Tokens */
+            output_tokens?: number | null;
+            /** Reasoning Tokens */
+            reasoning_tokens?: number | null;
+        };
+        /** OutputValidation */
+        OutputValidation: {
+            /**
+             * Mode
+             * @default text
+             * @enum {string}
+             */
+            mode: "text" | "json" | "schema" | "decision";
+            /** Paths */
+            paths?: string[];
+            /**
+             * Status
+             * @default not_requested
+             * @enum {string}
+             */
+            status: "not_requested" | "valid" | "invalid";
+        };
+        /** ProviderCreate */
+        ProviderCreate: {
+            /** Alias */
+            alias: string;
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
+            /** Api Model */
+            api_model: string;
+            /**
+             * Base Url
+             * @default
+             */
+            base_url: string;
+            /** Catalog Id */
+            catalog_id: string;
+            /**
+             * Chat Visible
+             * @default false
+             */
+            chat_visible: boolean;
+            /** Connection Params */
+            connection_params?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+        };
+        /** ProviderPage */
+        ProviderPage: {
+            /** Items */
+            items: components["schemas"]["ProviderView"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** ProviderPatch */
+        ProviderPatch: {
+            /** Alias */
+            alias?: string | null;
+            /** Api Key */
+            api_key?: string | null;
+            /** Api Model */
+            api_model?: string | null;
+            /** Base Url */
+            base_url?: string | null;
+            /** Catalog Id */
+            catalog_id?: string | null;
+            /** Chat Visible */
+            chat_visible?: boolean | null;
+            /** Connection Params */
+            connection_params?: {
+                [key: string]: unknown;
+            } | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Expected Version */
+            expected_version: number;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+        };
+        /** ProviderView */
+        ProviderView: {
+            /** Alias */
+            alias: string;
+            /** Api Model */
+            api_model: string;
+            /** Base Url */
+            base_url: string;
+            /** Binding Version */
+            binding_version: number;
+            capabilities: components["schemas"]["ModelCapabilities"];
+            /** Catalog Id */
+            catalog_id: string;
+            /** Chat Supported */
+            chat_supported: boolean;
+            /** Chat Visible */
+            chat_visible: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Has Api Key */
+            has_api_key: boolean;
+            /**
+             * Has Connection Params
+             * @default false
+             */
+            has_connection_params: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "llm" | "decision";
+            latest_test?: components["schemas"]["TestSummary"] | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Vendor */
+            vendor: string;
+            /** Version */
+            version: number;
+        };
+        /** SavedProvider */
+        SavedProvider: {
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+            /** Version */
+            version: number;
+        };
+        /** TestCallInput */
+        TestCallInput: {
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            /** Input */
+            input: components["schemas"]["GenerateInput"] | components["schemas"]["DecisionInput"];
+        };
+        /** TestSummary */
+        TestSummary: {
+            /** Binding Version */
+            binding_version: number;
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            /** Capabilities */
+            capabilities?: string[];
+            /**
+             * Stale
+             * @default false
+             */
+            stale: boolean;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Status */
+            status: string;
+        };
+        /** ToolCall */
+        ToolCall: {
+            function: components["schemas"]["ToolCallFunction"];
+            /** Id */
+            id: string;
+            /**
+             * Type
+             * @default function
+             * @constant
+             */
+            type: "function";
+        };
+        /** ToolCallFunction */
+        ToolCallFunction: {
+            /** Arguments */
+            arguments: string;
+            /** Name */
+            name: string;
+        };
+        /** ToolDefinition */
+        ToolDefinition: {
+            function: components["schemas"]["ToolFunction"];
+            /**
+             * Type
+             * @default function
+             * @constant
+             */
+            type: "function";
+        };
+        /** ToolFunction */
+        ToolFunction: {
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Name */
+            name: string;
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
         };
     };
     responses: never;
@@ -176,6 +984,387 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemoOverview"];
+                };
+            };
+        };
+    };
+    available_v1_models_available_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvailableModels"];
+                };
+            };
+        };
+    };
+    chat_call_v1_models_calls_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatCallInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    call_record_v1_models_calls__call_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallRecordView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalog_v1_models_catalog_get: {
+        parameters: {
+            query?: {
+                q?: string;
+                vendor?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operation_v1_models_operations__operation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedProvider"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    providers_v1_models_providers_get: {
+        parameters: {
+            query?: {
+                q?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_provider_v1_models_providers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedProvider"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provider_v1_models_providers__provider_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_provider_v1_models_providers__provider_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedProvider"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    changes_v1_models_providers__provider_id__changes_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelChangePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_provider_v1_models_providers__provider_id__tests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestCallInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_record_v1_models_test_calls__call_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallRecordView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

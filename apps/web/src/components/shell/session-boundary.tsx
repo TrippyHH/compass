@@ -97,6 +97,9 @@ function SessionBoundary({ frame }: { frame: Frame }) {
   useSyncExternalStore(session.subscribe, session.snapshot, session.serverSnapshot);
   useEffect(() => session.start(), [session]);
   const active = session.phase === "active";
+  // A backgrounded document keeps its mounted tree and only gets covered, so returning to the
+  // tab restores the same form and scroll position once the probe confirms the same authorization.
+  const covered = session.suspended;
   const visibleShell = active ? payload : session.phase === "boot" ? previous : null;
   function submit(event: FormEvent<HTMLDivElement>) {
     const form = event.target;
@@ -125,11 +128,18 @@ function SessionBoundary({ frame }: { frame: Frame }) {
           )}
         </main>
       )}
+      {covered && (
+        <main className="safe-state" role="status" aria-live="polite">
+          <div className="brand-mark">C</div>
+          <h1>Compass</h1>
+          <p>{session.message}</p>
+        </main>
+      )}
       <div
         data-protected-root
         ref={(element) => session.attach(element)}
-        hidden={!visibleShell}
-        inert={!visibleShell}
+        hidden={!visibleShell || covered}
+        inert={!visibleShell || covered}
         onSubmitCapture={submit}
         onInputCapture={(event) => {
           const target = event.target as HTMLElement;

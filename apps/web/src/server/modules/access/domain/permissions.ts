@@ -1,6 +1,6 @@
 import { reject } from "../../../platform/errors.ts";
 
-export const PERMISSION_CATALOG_VERSION = "1";
+export const PERMISSION_CATALOG_VERSION = "2";
 export type GrantScope = "tenant" | "workspace";
 const entries = [
   ["module.analysis", "分析入口", "both"],
@@ -26,6 +26,7 @@ const entries = [
   ["overview.read", "查看总览数据", "both"],
   ["audit.read", "读取审计", "both"],
   ["audit.export", "导出审计", "both"],
+  ["models.invoke", "使用模型", "both"],
 ] as const;
 
 export type Permission = (typeof entries)[number][0];
@@ -46,6 +47,7 @@ export const DEFAULT_TEMPLATES: Record<WorkspaceRole, readonly Permission[]> = {
     "module.plugins",
     "module.automations",
     "module.boards",
+    "models.invoke",
     "workspaces.read",
   ],
   viewer: ["module.reports", "module.boards", "workspaces.read"],

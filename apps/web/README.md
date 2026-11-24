@@ -1,6 +1,6 @@
 # Web / BFF
 
-Next.js App Router + React + TypeScript。UI 与 BFF 在一个 Node 服务中部署。当前交付 [Feature 995](../../mai-specs/995-web-management-foundation/README.md)：本地账号、数据库会话、租户与工作区、直接成员、固定模板和个人权限、个人设置、通知与审计，以及原型完整导航框架。分析页提供聊天输入框架和会话分组空状态；分析执行、文件上传仍待接入。报告、看板、插件、定时及 Agent/Memory 管理保留明确空页。
+Next.js App Router + React + TypeScript。UI 与 BFF 在一个 Node 服务中部署。已交付 [Feature 995](../../mai-specs/995-web-management-foundation/README.md) 的本地账号、数据库会话、租户与工作区、直接成员、固定模板和个人权限、个人设置、通知与审计，以及原型完整导航框架；并交付 [Feature 993](../../mai-specs/993-lesson-11-llm-runtime/BRIEF.md) 的平台模型路由、能力测试与分析 Chat 选模调用。报告、看板、插件、定时及 Agent/Memory 其余管理保留明确空页。
 
 ## 启动与账号
 
@@ -22,15 +22,25 @@ pnpm dev -F web
 
 受管工具另支持 `reset-password --login-name ...`、`set-status --login-name ... --status disabled|active`、`set-platform-admin --login-name ... --platform-admin true|false`，安全变更撤销该用户全部会话并保护最后有效管理员。`cleanup-sessions` 清理过期或撤销超过 30 天的会话。审计不自动清理；部署方须安排受控备份、容量监测和保留策略，普通运行角色不能修改或删除历史。
 
-开发启动 `pnpm dev -F web` 会先停止目标端口的监听进程及当前 Web 目录的旧 Next 开发实例，再启动自身；先正常退出，5 秒后仍未退出则强制结束。默认端口 3000，支持 `PORT` 或 `-- --port 3002`。该入口依赖 macOS / Linux / WSL2 的 `lsof` 和 `ps`，会终止占用目标端口的其他应用。
+开发启动 `pnpm dev -F web` 会先停止目标端口的监听进程及当前 Web 目录的旧 Next 开发实例，再启动自身；先正常退出，5 秒后仍未退出则强制结束。默认端口 3000，支持 `PORT` 或 `-- --port 3002`。该入口依赖 macOS / Linux / WSL2 的 `lsof` 和 `ps`，会终止占用目标端口的其他应用。服务就绪后自动使用默认浏览器打开 `http://127.0.0.1:<端口>/login`；设置 `WEB_DEV_OPEN_BROWSER=0` 或 `CI=true` 可关闭，未就绪时只提示手动打开的地址。
 
 页面地址使用稳定短标识，例如 `/t/yuanshan/w/huadong/analysis`。创建租户或空间时填写地址短标识；改名保持地址不变。旧 UUID 链接自动跳转，API 与权限上下文继续使用 UUID。分析侧栏仅保留新建按钮及按时间/主题的会话分组选项；侧栏顶部仅在分析模块显示“Compass / 分析空间”；其他模块直接显示一级导航标题，正文不重复标题。导航图标直接使用原型 SVG 图形，一级与二级菜单逐项映射；按钮、菜单行、浮层和移动抽屉按 [导航 UI 对照规范](../../mai-specs/995-web-management-foundation/design/NAVIGATION_UI.md) 维护。
+
+## 模型路由与 Chat
+
+模型接入只有“管理与治理 → Agent 与能力 → 模型路由”一个页面入口：平台管理员在该页添加、编辑和测试模型；其他获权成员只读查看当前开放的生成模型摘要。BFF 通过 `/api/web/v1/platform/models/*`、`/models/available` 与 `/models/calls` 调用 Agent，浏览器不接触端点与凭据。
+
+- 管理接口只接受平台管理员；Chat 调用要求当前空间有效、`module.analysis` 与 `models.invoke` 两项权限。`models.invoke` 为独立可授权动作，升级不向旧成员静默授予；新分析师模板包含该动作。
+- 保存配置需要 `COMPASS_AGENT_SERVICE_TOKEN`；Agent 同时需要 `COMPASS_MODEL_ENCRYPTION_KEY`。缺少时模型接口返回明确不可用，Web 基础功能仍可运行。
+- 模型测试与 Chat 使用 POST + fetch 读取 SSE，BFF 校验每个事件、call_id、final 唯一性与单帧大小，未知事件会关闭流并显示“未完成”。停止调用会中断上游请求。
+- 分析页默认向支持 Thinking 的模型传递 `thinking=true`、`reasoning_effort=high`；不展示 Thinking 或搜索开关。附件仅保留在本页内存，最多 10 个，暂不发送给模型。
+- Web 迁移 `0003_model_invocation_permission` 只调整权限 CHECK 上限与允许值；页面与会话状态不写入服务端历史。
 
 ## 工程边界
 
 [服务端模块](src/server/README.md) 按 identity/access/audit/notifications 划分，运行时 SQL 和连接使用 `server-only`。受保护页面通过 Next App Router 局部导航，共享布局保留侧栏与顶部框架；搜索、分页、空间切换及保存后刷新保持 SPA 交互。首次进入与每次切页均校验当前权限后显示内容；断线、身份变化、超时立即清屏，恢复时重新加载文档。业务写入、审计与通知共用一个事务，普通查询使用可重复读快照，审计导出提交记录后才返回 CSV。
 
-`GET /healthz` 检查进程，`GET /readyz` 检查配置及 Web 迁移版本；`/api/web/v1/*` 是严格校验的本地业务 API，响应 `private, no-store`。Web 基座运行只依赖自己的 PostgreSQL。Agent、Memory、Worker、IdP、模型和文件服务无需在线。
+`GET /healthz` 检查进程，`GET /readyz` 检查配置及 Web 迁移版本；`/api/web/v1/*` 是严格校验的本地业务 API，响应 `private, no-store`。Web 基座运行只依赖自己的 PostgreSQL；模型路由、能力测试与 Chat 调用另需 Agent 在线。Memory、Worker、IdP 与文件服务无需在线。
 
 `/demo` 与 `/api/demo/overview` 保留原工程演示，需要 `COMPASS_DEMO_ENABLED=true`；后者经服务端 `AGENT_API_URL` 调用 Agent，超时或契约不兼容返回 503、始终 no-store。演示类型由根 `pnpm contracts` 生成，禁止直接修改 `src/generated`。Web build/typecheck 的静态契约生成仍需 Python 工具环境。
 

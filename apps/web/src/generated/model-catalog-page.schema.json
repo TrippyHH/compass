@@ -1,0 +1,173 @@
+{
+  "$defs": {
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "Capability",
+      "type": "object"
+    },
+    "CatalogItem": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter_supported": {
+          "title": "Adapter Supported",
+          "type": "boolean"
+        },
+        "api_model": {
+          "title": "Api Model",
+          "type": "string"
+        },
+        "base_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Base Url"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/ModelCapabilities"
+        },
+        "chat_supported": {
+          "default": false,
+          "title": "Chat Supported",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "decision",
+            "unsupported"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "litellm",
+            "project_verified",
+            "systemone"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "vendor": {
+          "title": "Vendor",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "vendor",
+        "api_model",
+        "kind",
+        "adapter_supported",
+        "source",
+        "capabilities"
+      ],
+      "title": "CatalogItem",
+      "type": "object"
+    },
+    "ModelCapabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "json_output": {
+          "$ref": "#/$defs/Capability"
+        },
+        "reasoning_efforts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasoning Efforts",
+          "type": "array"
+        },
+        "schema_output": {
+          "$ref": "#/$defs/Capability"
+        },
+        "stream": {
+          "$ref": "#/$defs/Capability"
+        },
+        "sync": {
+          "$ref": "#/$defs/Capability"
+        },
+        "thinking": {
+          "$ref": "#/$defs/Capability"
+        },
+        "tools": {
+          "$ref": "#/$defs/Capability"
+        }
+      },
+      "required": [
+        "sync",
+        "stream",
+        "tools",
+        "thinking",
+        "json_output",
+        "schema_output"
+      ],
+      "title": "ModelCapabilities",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/CatalogItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "page": {
+      "title": "Page",
+      "type": "integer"
+    },
+    "page_size": {
+      "title": "Page Size",
+      "type": "integer"
+    },
+    "sdk_version": {
+      "title": "Sdk Version",
+      "type": "string"
+    },
+    "total": {
+      "title": "Total",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "items",
+    "total",
+    "page",
+    "page_size",
+    "sdk_version"
+  ],
+  "title": "CatalogPage",
+  "type": "object"
+}

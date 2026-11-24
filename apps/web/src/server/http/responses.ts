@@ -58,8 +58,8 @@ export function errorResponse(error: unknown): Response {
     { status, headers: { ...privateHeaders, ...(status === 429 ? { "Retry-After": "60" } : {}) } },
   );
 }
-export async function readJson(request: Request): Promise<unknown> {
-  if (Number(request.headers.get("content-length") ?? 0) > 65536)
+export async function readJson(request: Request, limit = 65536): Promise<unknown> {
+  if (Number(request.headers.get("content-length") ?? 0) > limit)
     throw new ApplicationError("validation_failed", "请求内容过大。");
   if (!request.body) return {};
   const reader = request.body.getReader();
@@ -70,7 +70,7 @@ export async function readJson(request: Request): Promise<unknown> {
       const { value, done } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 65536) {
+      if (size > limit) {
         await reader.cancel();
         throw new ApplicationError("validation_failed", "请求内容过大。");
       }

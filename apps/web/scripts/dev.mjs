@@ -3,6 +3,12 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { realpathSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
+import {
+  browserCommand,
+  resolveDevLoginUrl,
+  shouldOpenBrowser,
+  waitForServer,
+} from "./dev-browser.mjs";
 
 const directory = realpathSync(fileURLToPath(new URL("..", import.meta.url)));
 const args = process.argv.slice(2);
@@ -13,6 +19,8 @@ for (let i = 0; i < args.length; i++) {
 }
 if (!/^\d+$/.test(port ?? "") || Number(port) < 1024 || Number(port) > 65535)
   throw new Error("Web development port must be between 1024 and 65535.");
+const loginUrl = resolveDevLoginUrl(port);
+const openBrowser = shouldOpenBrowser(process.env);
 function lsof(args) {
   try {
     return execFileSync("lsof", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -95,10 +103,33 @@ const child = spawn(
   },
 );
 for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => child.kill(signal));
+// Open the browser only after the server answers, and stop waiting when Next exits.
+const browserAbort = new AbortController();
+if (openBrowser)
+  void waitForServer(loginUrl, { signal: browserAbort.signal }).then((ready) => {
+    if (!ready) {
+      if (!browserAbort.signal.aborted)
+        console.warn(`Web did not answer at ${loginUrl}; open it manually.`);
+      return;
+    }
+    const { command, args: commandArgs } = browserCommand(process.platform, loginUrl, process.env);
+    try {
+      const opener = spawn(command, commandArgs, { stdio: "ignore", detached: true });
+      opener.on("error", (error) =>
+        console.warn(`Could not open the default browser: ${error.message}`),
+      );
+      opener.unref();
+      console.log(`Opening ${loginUrl} in the default browser.`);
+    } catch (error) {
+      console.warn(`Could not open the default browser: ${error.message}`);
+    }
+  });
 child.on("error", (error) => {
+  browserAbort.abort();
   console.error(error);
   process.exitCode = 1;
 });
 child.on("exit", (code, signal) => {
+  browserAbort.abort();
   process.exitCode = code ?? (signal === "SIGINT" ? 130 : 143);
 });

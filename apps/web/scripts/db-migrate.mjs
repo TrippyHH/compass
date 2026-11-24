@@ -59,24 +59,22 @@ export async function migrate({ mode = "native", from, to = revision, url } = {}
           migrationLoaderStrategies: [
             {
               extensions: [".sql"],
-              loader: async (paths) => {
-                if (
-                  paths.length !== sources.length ||
-                  sources.some((source) => !paths.includes(source.path))
-                )
-                  throw new Error("Unexpected migration sources");
-                return sources.map((source) => ({
-                  id: source.id,
-                  filePaths: [source.path],
-                  actions: {
-                    up(pgm) {
-                      pgm.sql(source.up);
-                      pgm.sql(sourceRecordSql(source));
+              loader: async (paths) =>
+                paths.map((target) => {
+                  const source = sources.find((item) => item.path === target);
+                  if (!source) throw new Error("Unexpected migration sources");
+                  return {
+                    id: source.id,
+                    filePaths: [source.path],
+                    actions: {
+                      up(pgm) {
+                        pgm.sql(source.up);
+                        pgm.sql(sourceRecordSql(source));
+                      },
+                      down: false,
                     },
-                    down: false,
-                  },
-                }));
-              },
+                  };
+                }),
             },
           ],
         });

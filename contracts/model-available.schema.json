@@ -1,0 +1,118 @@
+{
+  "$defs": {
+    "AvailableModel": {
+      "additionalProperties": false,
+      "properties": {
+        "alias": {
+          "title": "Alias",
+          "type": "string"
+        },
+        "api_model": {
+          "title": "Api Model",
+          "type": "string"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/ModelCapabilities"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "llm",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "alias",
+        "api_model",
+        "kind",
+        "capabilities"
+      ],
+      "title": "AvailableModel",
+      "type": "object"
+    },
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "Capability",
+      "type": "object"
+    },
+    "ModelCapabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "json_output": {
+          "$ref": "#/$defs/Capability"
+        },
+        "reasoning_efforts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasoning Efforts",
+          "type": "array"
+        },
+        "schema_output": {
+          "$ref": "#/$defs/Capability"
+        },
+        "stream": {
+          "$ref": "#/$defs/Capability"
+        },
+        "sync": {
+          "$ref": "#/$defs/Capability"
+        },
+        "thinking": {
+          "$ref": "#/$defs/Capability"
+        },
+        "tools": {
+          "$ref": "#/$defs/Capability"
+        }
+      },
+      "required": [
+        "sync",
+        "stream",
+        "tools",
+        "thinking",
+        "json_output",
+        "schema_output"
+      ],
+      "title": "ModelCapabilities",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/AvailableModel"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "title": "AvailableModels",
+  "type": "object"
+}

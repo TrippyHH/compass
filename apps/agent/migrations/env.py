@@ -1,4 +1,5 @@
 from alembic import context
+from compass_agent import models  # noqa: F401  (register ORM metadata)
 from compass_agent.database import Base
 from compass_agent.settings import get_settings
 from sqlalchemy import create_engine

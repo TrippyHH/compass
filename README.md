@@ -37,9 +37,9 @@ pnpm db:manage -F web -- create-user --login-name local.admin --display-name 本
 pnpm dev
 ```
 
-打开 <http://127.0.0.1:3000/login> 使用刚创建的账号登录；受管工具会提示隐藏输入密码。原链路演示位于 <http://127.0.0.1:3000/demo>。API 文档位于 <http://127.0.0.1:8000/docs>。在另一个终端执行 `pnpm smoke` 验证整个链路。停止开发服务使用 Ctrl+C；`pnpm db:down` 停止数据库并保留数据卷。
+打开 <http://127.0.0.1:3000/login> 使用刚创建的账号登录；Web 就绪后会自动打开该地址，设置 `WEB_DEV_OPEN_BROWSER=0` 可关闭。受管工具会提示隐藏输入密码。原链路演示位于 <http://127.0.0.1:3000/demo>。API 文档位于 <http://127.0.0.1:8000/docs>。在另一个终端执行 `pnpm smoke` 验证整个链路。停止开发服务使用 Ctrl+C；`pnpm db:down` 停止数据库并保留数据卷。
 
-默认端口：home 3001、Web 3000、agent 8000、memory 8001、PostgreSQL 55432；worker 不监听 HTTP 端口。启动前确认端口空闲。`.env` 只由根任务脚本加载；绕过根入口直接运行子应用脚本或 `next start` 时需显式注入环境。不要把 `.env` 复制到 Web 目录或提交 Git。
+默认端口：home c、Web 3000、agent 8000、memory 8001、PostgreSQL 55432；worker 不监听 HTTP 端口。启动前确认端口空闲。`.env` 只由根任务脚本加载；绕过根入口直接运行子应用脚本或 `next start` 时需显式注入环境。不要把 `.env` 复制到 Web 目录或提交 Git。
 
 根命令通过 Turborepo 筛选子应用。统一规范为 `pnpm <任务> -F <应用短名>`，短名从 workspace 的 `package.json` 包名自动解析，新增 app 无需登记别名：
 
@@ -115,7 +115,7 @@ CI 由本仓库的 [Compass workflow](.github/workflows/compass.yml) 执行。
 ## 当前能力边界
 
 - 示例接口显式启用 `COMPASS_DEMO_ENABLED=true` 后才开放，数据全部为固定合成数据。接口不接受租户、SQL 或自由代码输入；尚未接入真实经营数据。
-- 本地登录、数据库会话、租户与成员、个人权限、CSRF、设置、通知和审计已接入；企业 OIDC、委托身份、Run / SSE、模型执行、Sandbox、EvalOps 留待后续 Feature。共享部署需配置 HTTPS、私有凭据及备份策略。
+- 本地登录、数据库会话、租户与成员、个人权限、CSRF、设置、通知和审计已接入；LLM Runtime、平台模型路由、能力测试与分析 Chat 选模调用已接入。企业 OIDC、委托身份、Run / SSE、业务工具执行、Sandbox、EvalOps 留待后续 Feature。共享部署需配置 HTTPS、私有凭据及备份策略。
 - Python 应用已创建：`agent`（原 agent-api）、`memory`、`worker`。memory 当前仅有服务健康检查，worker 仅有进程生命周期；普通分析 Runner、记忆业务、Temporal / Outbox 与共享执行包仍按 [实施任务](mai-specs/999-compass-product-course-landing-app/design/scaffold-design.md#8-部署收敛实施任务)推进。
 - 当前 Web 已搭齐原型框架；分析、报告、看板及 Agent/Memory 业务页面为空页。实现及验收见 [995](mai-specs/995-web-management-foundation/README.md)。
 - 本工程没有授予开源许可证；依赖许可证由各上游项目提供。

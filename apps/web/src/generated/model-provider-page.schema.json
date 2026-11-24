@@ -1,0 +1,252 @@
+{
+  "$defs": {
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "Capability",
+      "type": "object"
+    },
+    "ModelCapabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "json_output": {
+          "$ref": "#/$defs/Capability"
+        },
+        "reasoning_efforts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasoning Efforts",
+          "type": "array"
+        },
+        "schema_output": {
+          "$ref": "#/$defs/Capability"
+        },
+        "stream": {
+          "$ref": "#/$defs/Capability"
+        },
+        "sync": {
+          "$ref": "#/$defs/Capability"
+        },
+        "thinking": {
+          "$ref": "#/$defs/Capability"
+        },
+        "tools": {
+          "$ref": "#/$defs/Capability"
+        }
+      },
+      "required": [
+        "sync",
+        "stream",
+        "tools",
+        "thinking",
+        "json_output",
+        "schema_output"
+      ],
+      "title": "ModelCapabilities",
+      "type": "object"
+    },
+    "ProviderView": {
+      "additionalProperties": false,
+      "properties": {
+        "alias": {
+          "title": "Alias",
+          "type": "string"
+        },
+        "api_model": {
+          "title": "Api Model",
+          "type": "string"
+        },
+        "base_url": {
+          "title": "Base Url",
+          "type": "string"
+        },
+        "binding_version": {
+          "title": "Binding Version",
+          "type": "integer"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/ModelCapabilities"
+        },
+        "catalog_id": {
+          "title": "Catalog Id",
+          "type": "string"
+        },
+        "chat_supported": {
+          "title": "Chat Supported",
+          "type": "boolean"
+        },
+        "chat_visible": {
+          "title": "Chat Visible",
+          "type": "boolean"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "has_api_key": {
+          "title": "Has Api Key",
+          "type": "boolean"
+        },
+        "has_connection_params": {
+          "default": false,
+          "title": "Has Connection Params",
+          "type": "boolean"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "decision"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "latest_test": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TestSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        },
+        "vendor": {
+          "title": "Vendor",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "catalog_id",
+        "vendor",
+        "api_model",
+        "alias",
+        "kind",
+        "base_url",
+        "has_api_key",
+        "enabled",
+        "chat_visible",
+        "chat_supported",
+        "version",
+        "binding_version",
+        "capabilities",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "ProviderView",
+      "type": "object"
+    },
+    "TestSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "binding_version": {
+          "title": "Binding Version",
+          "type": "integer"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "stale": {
+          "default": false,
+          "title": "Stale",
+          "type": "boolean"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "call_id",
+        "status",
+        "binding_version",
+        "started_at"
+      ],
+      "title": "TestSummary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ProviderView"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "page": {
+      "title": "Page",
+      "type": "integer"
+    },
+    "page_size": {
+      "title": "Page Size",
+      "type": "integer"
+    },
+    "total": {
+      "title": "Total",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "items",
+    "total",
+    "page",
+    "page_size"
+  ],
+  "title": "ProviderPage",
+  "type": "object"
+}

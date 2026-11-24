@@ -4,6 +4,18 @@
 
 外围JSX、Zod字段展开和重复CRUD样板省略；核心权限、并发、密码校验、防重复与失效分支在下文展开。前次简化修订运行过Node scrypt内存探针；本次只验证文档，不以代码片段充当编译或集成证据。
 
+## 2026-11-23 后台恢复修订（当前有效）
+
+用户反馈切换窗口后必然整页重载，表单与滚动位置丢失。本节替代 §6.3/§6.4 中“visibility 返回 visible 时完整重新加载当前 URL”的约束；失权清理、默认隐藏与迟到响应丢弃要求继续有效。
+
+- `visibilitychange(hidden)`、`pagehide`、BFCache 冻结只遮蔽不退役：同步 hidden/inert、清空 deadline、暂停心跳与到期定时器；文档对象、表单与滚动位置保留。
+- 返回前台或 `pageshow(persisted=true)` 先以当前身份复验 `/session`：sessionId 与 viewRevision 均未变才原地解除遮蔽；复验失败、401/403、版本或身份变化仍退役旧文档并完整重载，不恢复旧内容。
+- 后台期间不显示受保护内容；复验期间显示安全状态遮罩（“正在确认访问权限…”），旧内容不闪现。
+- 未变：初始 RSC 默认隐藏、当前 generation/viewKey 校验、CSRF 与 deadline 语义（后台不续期、不判超时）、写操作仍需 active 且未过期。
+- 验收补充：切标签页/最小化返回不产生 document 请求，表单值与滚动位置保留；撤权、换身份、离线仍清屏并按原规则重载。
+
+实现位置：`client/request-scope.ts` 的 `suspend()/resume()/conceal()/reveal()`；`components/shell/session-boundary.tsx` 依据 `session.suspended` 遮蔽受保护根节点并渲染遮罩。
+
 ## 2026-11-02 SPA 导航修订（当前有效）
 
 用户要求保证基础 SPA 交互体验。本节替代下文 D01 对普通导航强制完整文档跳转的约束；权限范围、初始显示校验和失权清理要求继续有效。
@@ -610,7 +622,7 @@ onProbeResult：先比对 generation/viewKey/sequence、abort 状态及当前文
 
 有效心跳从发起时间计算最多 30 秒的期限，前台每 15 秒复验；专用到期定时器负责清屏，所有异步回调和写入入口也检查期限。成功心跳只有仍处 active 时才能续期；一次失效后的新成功响应无法恢复旧子树。新 revision 不比较字符串大小，也不由任意数据响应“升级”；通过新文档当前服务端查询重新建立上下文。
 
-`visibilitychange(hidden)`、pagehide、offline、本地身份/撤权广播都先 retire。visibility 返回 visible、online 或 pageshow(persisted=true) 时保持旧根节点遮蔽并完整重新加载当前 URL；重复事件每份文档只发起一次 reload。正常首次 pageshow 只走 boot。意外发生同文档 popstate 也 retire 并重载，不能在旧文档直接恢复敏感路由。重新加载不增加历史条目；正常链接导航增加条目，前进/后退与深链仍可用。
+`visibilitychange(hidden)`、pagehide、offline、本地身份/撤权广播都先 retire（可见性/pagehide/BFCache 的返回恢复已由[文首后台恢复修订](#2026-11-23-后台恢复修订当前有效)替代为复验后原地恢复）。visibility 返回 visible、online 或 pageshow(persisted=true) 时保持旧根节点遮蔽并完整重新加载当前 URL；重复事件每份文档只发起一次 reload。正常首次 pageshow 只走 boot。意外发生同文档 popstate 也 retire 并重载，不能在旧文档直接恢复敏感路由。重新加载不增加历史条目；正常链接导航增加条目，前进/后退与深链仍可用。
 
 同步遮蔽使用显式 DOM hidden/inert 配合 React 同步清理，下一次 React 提交不得解除 retired 文档的遮蔽。默认隐藏和 visibility/pagehide 双入口共同处理恢复；浏览器生命周期事件的实际时序仍须 V05 证明。依据 [pageshow](https://developer.mozilla.org/en-US/docs/Web/API/Window/pageshow_event) 与 [pagehide](https://developer.mozilla.org/en-US/docs/Web/API/Window/pagehide_event) 的事件语义设计，不依赖 pagehide 在所有移动场景必达，也不宣称能撤回已经获得的截图或信息。
 

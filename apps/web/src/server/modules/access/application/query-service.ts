@@ -380,6 +380,20 @@ export function createQueryService({ context: ctx, digest, newId }: Dependencies
       if (!match) reject("not_found");
       match.scope = await routeScope(token, match.scope);
       const pageScope = { ...match.scope };
+      // Self pages stay inside the shell, so their navigation has to point back at the
+      // tenant and workspace the member came from. Otherwise switching to 个人设置 and
+      // back loses the workspace context and every module link disappears.
+      if (!pageScope.tenantId && match.page.scopeKind === "self") {
+        const actor = await ctx.identity.requireActor(token);
+        const preferences = (await ctx.identity.profile(actor.userId)).preferences;
+        if (preferences.lastTenantId) {
+          const resolved = await routeScope(token, { tenantId: preferences.lastTenantId }).catch(
+            () => null,
+          );
+          if (resolved && "tenantId" in resolved && resolved.tenantId)
+            pageScope.tenantId = resolved.tenantId;
+        }
+      }
       if (pageScope.tenantId && !pageScope.workspaceId) {
         const actor = await ctx.identity.requireActor(token);
         const access = await ctx.access.current(actor, pageScope.tenantId);

@@ -1,0 +1,30 @@
+{
+  "owner": "agent",
+  "databaseKey": "main",
+  "feature": "993",
+  "from": "empty",
+  "to": "0002_model_runtime",
+  "engine": "PostgreSQL 17",
+  "tool": "Alembic 1.15 / SQLAlchemy 2.0",
+  "sourceRevision": "working-tree; fixed by source SHA-256",
+  "sources": [
+    {
+      "source": "migrations/versions/0001_demo_fixture.py",
+      "sha256": "9513f1fcaa4a4f65d43e3942745c4e794dab30b10425d31be26c427dc379d1ac"
+    },
+    {
+      "source": "migrations/versions/0002_model_runtime.py",
+      "sha256": "3c101d5cc799930563ee8e11a3850ca130372119102242b56eecbf4da6e67b7b"
+    }
+  ],
+  "bootstrap": "sql/bootstrap.sql",
+  "bootstrapSha256": "7635978afa23bd535b0592b0b3082105c017b60f1c6e81a9b9f610d1f37acf4c",
+  "incremental": "sql/upgrades/0001_demo_fixture__0002_model_runtime.sql",
+  "incrementalSha256": "e73d5a160dd56df4cf4b82809dceae11edf2937f90e1669c701269edc5cf2c1c",
+  "generate": "pnpm db:sql -F agent",
+  "apply": "pnpm db:migrate -F agent",
+  "prerequisites": "Owned agent/main database; DATABASE_URL only for offline SQL generation; apply with the Alembic migration entry",
+  "transaction": "single transaction (PostgreSQL DDL)",
+  "dataImpact": "Adds model_provider, model_change and model_call; existing demo and business data are unchanged",
+  "recovery": "Restore a verified backup into a new owned database; verify alembic_version=0002 and runtime grants before switching"
+}

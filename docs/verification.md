@@ -1,5 +1,15 @@
 # 脚手架验证记录
 
+## 2026-11-22 · LLM Runtime 与平台模型路由
+
+[Feature 993 实施记录](../mai-specs/993-lesson-11-llm-runtime/IMPLEMENTATION.md)为本次证据真源。Agent 的 LLM Runtime、LiteLLM 生成适配与 System One 决策适配、三表配置与调用元记录、模型 HTTP/SSE 接口，Web 的平台模型管理、能力测试、租户只读摘要与 Chat 选模调用，以及契约、迁移与 SQL 交付已落地。
+
+- Agent：Ruff、格式检查、Pyright 0 error；pytest 64 passed，1 项 PostgreSQL 集成测试因缺少专用连接跳过。包含 Runtime 生命周期、取消、单次出站、密钥往返、多轮工具续接、LiteLLM 与 System One 适配器及 SSE 契约。
+- Web：TypeScript 与 ESLint（含导入边界、a11y）通过；契约重新生成并逐文件比对无差异，9 份 JSON Schema 通过 Ajv 2020 编译与样例校验。Vitest 受本机沙箱子进程限制未执行，真实模型调用未执行，均不记作通过。
+- `web/main` 升至 `0003_model_invocation_permission`，`agent/main` 升至 `0002_model_runtime`；两份 manifest 登记源摘要与恢复方式。两个库均在本机 PostgreSQL 17（`compass-postgres-1`，127.0.0.1:55432）完成旧库升级，`/readyz` 返回 200；空库 bootstrap、SQL 文件重放与恢复仍待专用库验收。
+- 模型接入只有「Agent 与能力 → 模型路由」一个页面入口；BFF 资源前缀不变。本机 Chromium 已实际打开该页与添加 Provider 弹窗，Agent 模型接口与 BFF 路由冒烟通过（含 401/422 边界）。
+- `litellm-core` 锁文件声明与受管 Agent 数据库角色供应留作后续环境步骤，详见实施记录。
+
 ## 2026-10-26 · 独立业务数据准备工具
 
 生成器与零售候选迁移已移入 `tools/data-seed/`，home 脚手架页同步。根 `pnpm check`、`pnpm build` 和实际 CLI 生成 / 校验 / 导出 / 快照重放通过；Docker 存储 I/O 错误阻断容器与真实 PostgreSQL 验证，11 项集成测试因无专用凭据跳过。完整范围、证据与待验项见 [998 本次实施记录](../mai-specs/998-business-data-seeding-tool/IMPLEMENTATION.md#独立数据准备工具迁移2026-10-26)。

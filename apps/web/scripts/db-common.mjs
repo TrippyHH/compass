@@ -3,7 +3,11 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-export const revisions = ["0001_web_foundation", "0002_readable_routes"];
+export const revisions = [
+  "0001_web_foundation",
+  "0002_readable_routes",
+  "0003_model_invocation_permission",
+];
 export const revision = revisions.at(-1);
 export const databaseRoot = new URL("../db/main/", import.meta.url);
 export const migrationDirectory = fileURLToPath(new URL("migrations/", databaseRoot));

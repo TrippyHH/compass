@@ -20,6 +20,7 @@ import {
   clearSessionCookie,
 } from "./security";
 import { errorResponse, jsonResponse, privateHeaders, readJson } from "./responses";
+import { handleModelRoute, isModelRoute } from "./model-routes";
 import type { TransactionMode } from "../platform/db";
 
 const empty = z.strictObject({});
@@ -90,7 +91,10 @@ async function dispatchWebRequest(request: Request): Promise<Response> {
       });
     }
     if (writing) requireCsrf(request, token);
-    const input = writing ? await readJson(request) : undefined;
+    const modelPath = isModelRoute(path);
+    const input = writing
+      ? await readJson(request, modelPath ? 2 * 1024 * 1024 : 65536)
+      : undefined;
     const run = async (
       work: (services: WebUseCases) => Promise<unknown>,
       schema?: z.ZodType,
@@ -105,6 +109,18 @@ async function dispatchWebRequest(request: Request): Promise<Response> {
           })
         : jsonResponse(result.value, result.viewRevision, status, schema);
     };
+    if (modelPath) {
+      const response = await handleModelRoute({
+        request,
+        token,
+        method,
+        path,
+        query,
+        body: input,
+        execute,
+      });
+      if (response) return response;
+    }
     if ((route === "session" || route === "navigation") && method === "GET") {
       const { pageId, ...scope } = sessionQuery.parse(query);
       if (scope.workspaceId && !scope.tenantId) reject("validation_failed");

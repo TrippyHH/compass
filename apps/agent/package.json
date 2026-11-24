@@ -9,6 +9,8 @@
     "typecheck": "uv run --locked pyright --project ../../pyproject.toml src tests",
     "test": "uv run --locked pytest tests",
     "db:migrate": "uv run --locked alembic upgrade head",
+    "db:sql": "node scripts/db-sql.mjs",
+    "db:sql:check": "node scripts/db-sql.mjs --check",
     "seed": "uv run --locked python -m compass_agent.seed"
   }
 }

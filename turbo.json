@@ -43,14 +43,25 @@
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
+        "CI",
         "DATABASE_URL",
         "AGENT_API_URL",
         "COMPASS_DEMO_ENABLED",
+        "COMPASS_AGENT_SERVICE_TOKEN",
+        "COMPASS_MODEL_ENCRYPTION_KEY",
+        "COMPASS_MODEL_ALLOWED_ORIGINS",
+        "COMPASS_MODEL_ALLOW_LOCAL_HTTP",
+        "DBUS_SESSION_BUS_ADDRESS",
+        "DISPLAY",
         "PORT",
+        "WAYLAND_DISPLAY",
         "WEB_DATABASE_URL",
+        "WEB_DEV_OPEN_BROWSER",
         "WEB_PUBLIC_ORIGIN",
         "WEB_AUTH_ALLOW_LOCAL_HTTP",
-        "WEB_SESSION_TTL_SECONDS"
+        "WEB_SESSION_TTL_SECONDS",
+        "WSL_DISTRO_NAME",
+        "XDG_RUNTIME_DIR"
       ]
     },
     "db:migrate": {

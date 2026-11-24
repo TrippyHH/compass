@@ -65,7 +65,7 @@ group("capabilities", "Agent 与能力", "workspace", "module.admin.capabilities
   ["capabilities-agent", "主 Agent", "admin/capabilities/agent"],
   ["capabilities-tools", "工具策略", "admin/capabilities/tools"],
   ["capabilities-skills", "Skill 与流程", "admin/capabilities/skills"],
-  ["capabilities-models", "模型路由", "admin/capabilities/models"],
+  ["capabilities-models", "模型路由", "admin/capabilities/models", "implemented"],
   ["capabilities-sandbox", "代码环境", "admin/capabilities/sandbox"],
   ["capabilities-hitl", "协同策略", "admin/capabilities/hitl"],
 ]);

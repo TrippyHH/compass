@@ -2,9 +2,9 @@ id: compass
 title: Compass 电商经营分析 Agent
 status: active
 version: 0.0.1
-updated: 2026-11-03
+updated: 2026-11-22
 scope: cross-course-learner-project
-implementation_stage: web-foundation
+implementation_stage: llm-runtime
 repository_url: https://github.com/shanggqm/compass
 pinned_revision: v0.0.1
 canonical:
@@ -22,6 +22,7 @@ canonical:
 depends_on:
   local_deployment: mai-specs/994-local-docker-deploy/design/TECH_DESIGN.md
   web_foundation: mai-specs/995-web-management-foundation/design/TECH_DESIGN.md
+  llm_runtime: mai-specs/993-lesson-11-llm-runtime/design/TECH_DESIGN.md
   product_definition: mai-specs/999-compass-product-course-landing-app/spec/product-definition.md
   prd: mai-specs/999-compass-product-course-landing-app/spec/PRD.md
   architecture: mai-specs/999-compass-product-course-landing-app/design/TECH_DESIGN.md

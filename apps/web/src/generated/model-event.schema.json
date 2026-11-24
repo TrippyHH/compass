@@ -1,0 +1,388 @@
+{
+  "$defs": {
+    "FinalEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "config_version": {
+          "title": "Config Version",
+          "type": "integer"
+        },
+        "continuation_token": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuation Token"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "finish_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finish Reason"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "requested_model": {
+          "title": "Requested Model",
+          "type": "string"
+        },
+        "response_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Model"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "canceled",
+            "incomplete"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "type": {
+          "const": "final",
+          "default": "final",
+          "title": "Type",
+          "type": "string"
+        },
+        "upstream_outcome_unknown": {
+          "default": false,
+          "title": "Upstream Outcome Unknown",
+          "type": "boolean"
+        },
+        "upstream_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upstream Request Id"
+        },
+        "usage": {
+          "$ref": "#/$defs/ModelUsage"
+        },
+        "validation": {
+          "$ref": "#/$defs/OutputValidation"
+        }
+      },
+      "required": [
+        "call_id",
+        "provider_id",
+        "config_version",
+        "status",
+        "duration_ms",
+        "requested_model"
+      ],
+      "title": "FinalEvent",
+      "type": "object"
+    },
+    "ModelUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "reasoning_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasoning Tokens"
+        }
+      },
+      "title": "ModelUsage",
+      "type": "object"
+    },
+    "OutputValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "text",
+          "enum": [
+            "text",
+            "json",
+            "schema",
+            "decision"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "status": {
+          "default": "not_requested",
+          "enum": [
+            "not_requested",
+            "valid",
+            "invalid"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "OutputValidation",
+      "type": "object"
+    },
+    "ReasoningMetaEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "reasoning_effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasoning Effort"
+        },
+        "thinking": {
+          "title": "Thinking",
+          "type": "boolean"
+        },
+        "type": {
+          "const": "reasoning_meta",
+          "default": "reasoning_meta",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "call_id",
+        "thinking"
+      ],
+      "title": "ReasoningMetaEvent",
+      "type": "object"
+    },
+    "StartEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "config_version": {
+          "title": "Config Version",
+          "type": "integer"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "start",
+          "default": "start",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "call_id",
+        "provider_id",
+        "config_version"
+      ],
+      "title": "StartEvent",
+      "type": "object"
+    },
+    "TextDeltaEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "text_delta",
+          "default": "text_delta",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "call_id",
+        "text"
+      ],
+      "title": "TextDeltaEvent",
+      "type": "object"
+    },
+    "ToolDeltaEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "default": "",
+          "title": "Arguments",
+          "type": "string"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "type": {
+          "const": "tool_delta",
+          "default": "tool_delta",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "call_id",
+        "index"
+      ],
+      "title": "ToolDeltaEvent",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "final": "#/$defs/FinalEvent",
+      "reasoning_meta": "#/$defs/ReasoningMetaEvent",
+      "start": "#/$defs/StartEvent",
+      "text_delta": "#/$defs/TextDeltaEvent",
+      "tool_delta": "#/$defs/ToolDeltaEvent"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/StartEvent"
+    },
+    {
+      "$ref": "#/$defs/TextDeltaEvent"
+    },
+    {
+      "$ref": "#/$defs/ToolDeltaEvent"
+    },
+    {
+      "$ref": "#/$defs/ReasoningMetaEvent"
+    },
+    {
+      "$ref": "#/$defs/FinalEvent"
+    }
+  ],
+  "title": "ModelEvent"
+}

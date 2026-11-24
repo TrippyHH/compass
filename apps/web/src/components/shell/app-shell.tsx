@@ -85,9 +85,16 @@ export function AppShell({
     return entry ? [entry] : [];
   });
   const adminEntries = ADMIN_SECTIONS.flatMap((key) => {
-    const entry = navigation.find((p) => p.section === key);
+    const candidates = navigation.filter((p) => p.section === key);
+    const entry =
+      (session.workspace ? candidates.find((p) => p.scopeKind === "workspace") : undefined) ??
+      candidates[0];
     return entry ? [entry] : [];
   });
+  // Entering governance from inside a workspace must keep that workspace, otherwise
+  // workspace-scoped admin pages (for example 模型路由) become unreachable from the rail.
+  const adminHome =
+    adminEntries.find((entry) => entry.scopeKind === "workspace") ?? adminEntries[0];
   const entries =
     section === "admin" ? adminEntries : navigation.filter((p) => p.section === section);
   const sidebarTitle =
@@ -452,7 +459,7 @@ export function AppShell({
           {adminEntries[0] && (
             <>
               <div className="rail-divider" />
-              {railItem(adminEntries[0], "shield", "admin")}
+              {railItem(adminHome, "shield", "admin")}
             </>
           )}
         </div>
@@ -576,7 +583,7 @@ export function AppShell({
                 {adminEntries[0] && (
                   <>
                     <div className="rail-divider" />
-                    {railItem(adminEntries[0], "shield", "admin")}
+                    {railItem(adminHome, "shield", "admin")}
                   </>
                 )}
               </div>

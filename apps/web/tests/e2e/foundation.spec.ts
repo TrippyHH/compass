@@ -649,7 +649,8 @@ test("analysis sidebar and composer follow the prototype interaction", async ({
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "新建分析", exact: true }).click();
   await expect(page.getByLabel("分析问题")).toHaveValue("");
-  await expect(page.getByRole("button", { name: "发送分析（待接入）" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "发送分析", exact: true })).toBeDisabled();
+  await expect(page.getByLabel("主模型")).toBeVisible();
   await page.setViewportSize({ width: 375, height: 812 });
   await expect(page.getByLabel("分析问题")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

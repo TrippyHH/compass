@@ -1,9 +1,9 @@
 {
   "owner": "web",
   "databaseKey": "main",
-  "feature": "995",
+  "feature": "993",
   "from": "empty",
-  "to": "0002_readable_routes",
+  "to": "0003_model_invocation_permission",
   "engine": "PostgreSQL 17",
   "tool": "node-pg-migrate 9.0.0",
   "sourceRevision": "working-tree; fixed by source SHA-256",
@@ -15,15 +15,20 @@
     {
       "source": "migrations/0002_readable_routes.sql",
       "sha256": "51566f95c5614a60cac4b24735928a7451b0aa98f7ace723d0503175407d4133"
+    },
+    {
+      "source": "migrations/0003_model_invocation_permission.sql",
+      "sha256": "340d3d4fe35bfa2483fec8d8bc112e939daa411e6c03e5dabcea33968aa2dd40"
     }
   ],
   "bootstrap": "sql/bootstrap.sql",
-  "bootstrapSha256": "e502d7f524c7e684c17bf8ec58b8f2c877dabd6bd44ec351ddcbf77b370739ee",
-  "incremental": "sql/upgrades/0001_web_foundation__0002_readable_routes.sql",
+  "bootstrapSha256": "a4e243daa14394083e24bc3c3315b003f756df633773b9af6bb43e917f7eec03",
+  "incremental": "sql/upgrades/0002_readable_routes__0003_model_invocation_permission.sql",
+  "incrementalSha256": "6297dd07f73969762f2c23eace47647f6d06e588f5538b3c8d788324a13d4ac4",
   "generate": "pnpm db:sql -F web",
-  "apply": "pnpm db:apply-sql -F web -- --from empty --to 0002_readable_routes",
+  "apply": "pnpm db:apply-sql -F web -- --from empty --to 0003_model_invocation_permission",
   "prerequisites": "Provisioned owned empty web/main database, owner/migrator/runtime roles; managed target checks and lock",
   "transaction": "single transaction",
-  "dataImpact": "Creates Web schema and stable tenant/workspace slugs; no users or new business rows",
+  "dataImpact": "Creates the Web schema, readable slugs and the models.invoke permission; no users or business rows",
   "recovery": "Restore verified backup into a new owned database; verify permissions/revision; revoke sessions before switching"
 }

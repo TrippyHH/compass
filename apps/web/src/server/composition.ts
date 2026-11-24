@@ -10,6 +10,7 @@ import { bindNotifications } from "./modules/notifications/pg-store";
 import { createIdentityService } from "./modules/identity/public";
 import { createAccessService } from "./modules/access/public";
 import { createQueryService } from "./modules/access/application/query-service";
+import { createModelService } from "./modules/models/public";
 import { verifyPassword, DUMMY_PASSWORD_HASH } from "./modules/identity/infrastructure/password";
 import { createLoginLimiter } from "./modules/identity/infrastructure/login-limit";
 import type { IdentityContext } from "./modules/identity/public";
@@ -102,6 +103,7 @@ function bindUseCases(client: SqlClient) {
       validateContext: queries.validateContext,
     }),
     access: createAccessService({ ...direct, newId: randomUUID }),
+    models: createModelService({ context, newId: randomUUID }),
     queries,
   };
 }
@@ -136,9 +138,10 @@ export async function ready() {
       "SELECT name FROM web_meta.pgmigrations ORDER BY id",
     );
     if (
-      rows.length !== 2 ||
+      rows.length !== 3 ||
       rows[0].name !== "0001_web_foundation" ||
-      rows[1].name !== "0002_readable_routes"
+      rows[1].name !== "0002_readable_routes" ||
+      rows[2].name !== "0003_model_invocation_permission"
     )
       throw new ApplicationError("unavailable", "数据库版本不可用。");
     return { status: "ready" as const };

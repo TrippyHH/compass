@@ -3,12 +3,15 @@ import type { PagePayload } from "@/contracts/page";
 import { OrganizationPages } from "@/features/organization/pages";
 import { PersonalPages, GovernancePages } from "@/features/personal/pages";
 import { AnalysisComposer } from "./analysis-composer";
+import { ModelsPages } from "@/features/models/pages";
 import { Blocks } from "lucide-react";
 export function ProductContent({ payload }: { payload: PagePayload }) {
   const { page } = payload;
   const content =
     page.section === "analysis" ? (
       <AnalysisComposer payload={payload} />
+    ) : page.id === "capabilities-models" ? (
+      <ModelsPages payload={payload} />
     ) : page.kind === "placeholder" ? (
       <section className="module-placeholder">
         <div className="placeholder-icon">

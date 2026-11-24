@@ -8,6 +8,18 @@ import { pnpmSpawnSync } from "./pnpm-spawn.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temp = mkdtempSync(path.join(tmpdir(), "compass-contracts-"));
+const schemaFiles = [
+  "demo-overview.schema.json",
+  "model-available.schema.json",
+  "model-call-record.schema.json",
+  "model-call-response.schema.json",
+  "model-catalog-page.schema.json",
+  "model-change-page.schema.json",
+  "model-event.schema.json",
+  "model-provider-page.schema.json",
+  "model-provider-view.schema.json",
+  "model-saved-provider.schema.json",
+];
 function run(cmd, args) {
   const options = { cwd: root, stdio: "inherit" };
   const result = cmd === "pnpm" ? pnpmSpawnSync(args, options) : spawnSync(cmd, args, options);
@@ -32,9 +44,12 @@ try {
   ]);
   const outputs = [
     ["openapi.json", "contracts/openapi.json"],
-    ["demo-overview.schema.json", "contracts/demo-overview.schema.json"],
+    ["openapi.json", "apps/web/src/generated/openapi.json"],
     ["api.ts", "apps/web/src/generated/api.ts"],
-    ["demo-overview.schema.json", "apps/web/src/generated/demo-overview.schema.json"],
+    ...schemaFiles.flatMap((file) => [
+      [file, `contracts/${file}`],
+      [file, `apps/web/src/generated/${file}`],
+    ]),
   ];
   for (const [source, dest] of outputs) {
     const target = path.join(root, dest);

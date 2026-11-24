@@ -26,13 +26,13 @@ Web 提供当前成员与授权核验契约；Agent / Memory 仍校验委托身�
 
 独立实例、同实例不同 database、同 database 不同 schema 均可按部署需求采用；共享实例不授予跨 app 访问权。同库方案须隔离 schema、权限、版本表和对象解析路径。数据库实例、账号和基础权限由部署流程创建；应用迁移只操作已授权的自有对象，不在 SQL 中硬编码环境连接或密码。
 
-| 单位               | 当前事实                              | 迁移源 / 入口                                                                              | 待接入内容                                    |
-| ------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------- |
-| `agent/main`       | 已有演示应用库                        | [Alembic migrations](../apps/agent/migrations/)、`pnpm db:migrate`                         | 完整与增量 SQL 导出、差异检查与升级验证入口   |
-| `data-seed/retail` | 998 独立教学数据候选库                | [工具迁移](../tools/data-seed/migrations/)、[数据操作流程](data-seeding.md)                | 沿用不可变数据包与候选发布，见 §8             |
-| `web/main`         | 995 的 8 张业务表；独立 PostgreSQL 17 | [node-pg-migrate 原生 SQL 与交付](../apps/web/db/main/README.md)、`pnpm db:migrate -F web` | 后续真实版本再追加迁移                        |
-| `memory/main`      | 当前仅健康检查                        | 首个文件/记忆持久化 Feature 登记工具、源路径和真实命令                                     | 文件/知识/记忆数据、独立连接、迁移与 SQL 交付 |
-| `worker` / `home`  | 当前无自有业务库                      | 无                                                                                         | 确有持久化需求再登记，不创建空目录            |
+| 单位               | 当前事实                                        | 迁移源 / 入口                                                                                                                          | 待接入内容                                    |
+| ------------------ | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `agent/main`       | 演示应用库 + 模型三表（0002）                   | [Alembic migrations](../apps/agent/migrations/)、`pnpm db:migrate`；[SQL 交付](../apps/agent/db/main/sql/manifest.json)、`pnpm db:sql` | 角色供应与受管 apply 入口                     |
+| `data-seed/retail` | 998 独立教学数据候选库                          | [工具迁移](../tools/data-seed/migrations/)、[数据操作流程](data-seeding.md)                                                            | 沿用不可变数据包与候选发布，见 §8             |
+| `web/main`         | 995 的 8 张业务表 + 993 的 `models.invoke` 权限 | [node-pg-migrate 原生 SQL 与交付](../apps/web/db/main/README.md)、`pnpm db:migrate -F web`                                             | 后续真实版本再追加迁移                        |
+| `memory/main`      | 当前仅健康检查                                  | 首个文件/记忆持久化 Feature 登记工具、源路径和真实命令                                                                                 | 文件/知识/记忆数据、独立连接、迁移与 SQL 交付 |
+| `worker` / `home`  | 当前无自有业务库                                | 无                                                                                                                                     | 确有持久化需求再登记，不创建空目录            |
 
 当前 `pnpm db:migrate` 执行 Web 与 Agent 已登记的迁移；以 `-F web` / `-F agent` 明确目标，各库独立事务。`pnpm contracts` 管理 HTTP 契约，不负责数据库迁移。首次接入与后续入口变更须同步本表、所属 app README、根命令说明和相关 manifest。
 

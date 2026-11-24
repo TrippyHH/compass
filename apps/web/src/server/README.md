@@ -8,9 +8,12 @@
 | access        | 租户、空间、直接成员、个人权限与页面资格     |
 | audit         | 追加审计、范围查询、游标和 CSV 编码          |
 | notifications | 本人可见通知、投递去重与标已读               |
+| models        | 平台/租户模型准入、可信上下文与模型操作审计  |
 | platform      | 错误、配置、事务与跨模块基础类型             |
-| http          | 严格 DTO、固定 Origin / CSRF、响应与缓存约定 |
+| http          | 严格 DTO、固定 Origin / CSRF、模型代理与 SSE |
 
 密码与平台资格由受管工具维护，运行凭据只有展示字段更新权限。迁移源、权限授予及恢复方法见 [web/main](../../db/main/README.md)。`src/contracts` 只公开安全 DTO 与纯权限目录，客户端不导入服务器模块。ESLint 与 [导入边界测试](../../tests/architecture/imports.test.ts)验证框架、分层及跨模块依赖。
+
+模型代理在授权事务提交后才调用 Agent；配置、能力测试与 Chat 请求单独允许 2 MiB，其他路由保持 64 KiB。上游响应先经 JSON Schema / 事件校验再转发，错误统一为安全 503；服务身份、可信上下文与端点均由服务端构造，浏览器不能覆盖。
 
 受保护页面使用完整文档导航；服务端初始隐藏内容，客户端同版本复验成功后显示。页面失效后同步隐藏正文和弹层、终止旧请求、清空草稿与下载 URL，再加载新文档。实现入口为 [请求控制](../client/request-scope.ts) 和 [会话边界](../components/shell/session-boundary.tsx)。
