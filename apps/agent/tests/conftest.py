@@ -43,6 +43,10 @@ def model_settings(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         "COMPASS_MODEL_ALLOWED_ORIGINS",
         "https://api.deepseek.com,https://api.typesafe.ai",
     )
+    monkeypatch.setenv("COMPASS_ROUTING_MODE", "flash_only")
+    monkeypatch.setenv("COMPASS_ROUTING_JEV_PROVIDER_ID", "")
+    monkeypatch.setenv("COMPASS_ROUTING_FLASH_PROVIDER_ID", "")
+    monkeypatch.setenv("COMPASS_ROUTING_PRO_PROVIDER_ID", "")
     get_settings.cache_clear()
     secrets._fernet.cache_clear()
     yield

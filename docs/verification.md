@@ -1,5 +1,17 @@
 # 脚手架验证记录
 
+## 2026-11-24 · 两级意图分类与模型路由
+
+[Feature 992 实施记录](../mai-specs/992-lesson-12-multi-model-routing/IMPLEMENTATION.md)为本次证据真源。Agent 新增 `routing/` 薄应用服务、40 场景只读字典与字典导出脚本，统一 `models/calls` 完成 JEV → Flash 兜底 → 字典特征 → fixed/auto/SC-39 选模 → 一次 Runtime 推理；Web BFF 归一化新旧主模型选择并校验 routed JSON/SSE，Chat 展示分类、字典特征、实际模型、选择原因与分项消耗。
+
+- Agent：Ruff 与格式检查通过，Pyright 0 error；设置专用测试库后 pytest 126 passed，0 skipped（默认未设置 `COMPASS_TEST_DATABASE_URL` 时该项明确跳过）。新增 57 项路由测试、1 项工作簿导出回归与 1 项决策概率舍入回归，覆盖 JEV 采用、低置信兜底、非法/额外字段拒绝、双路失败零推理、L1/L3、fixed/auto、SC-39、能力拒绝、派生 call_id、SSE 顺序与 40 场景特征完整性。
+- PostgreSQL：复用 Compose PostgreSQL 17 容器（127.0.0.1:55432）创建专用 `compass_agent_test` 库；`test_models_integration.py` 的真实 DDL、决策模型隐藏约束、调用元数据与 `usage` 写入通过。测试会删除目标库 ORM 表，不能指向 `compass` 运行库。
+- Web：ESLint 0 warning、TypeScript 通过，Vitest 12 个文件 51 项通过，含 routed 响应/事件契约、BFF 中继、fixed 选模校验、事件顺序与 40 场景显示标签；`contracts:check` 无漂移。
+- 构建：Agent wheel/sdist 与 Web Next.js 生产构建通过，wheel 内含 `routing/scenes.json`；字典 `--check` 输出 40 场景、10 分类与 `sha256:e5bd5357…bcae`。
+- 真实供应商联调：本机 PostgreSQL 17 与 Agent 上验证 auto L1（JEV → SC-02 → Flash）、auto L3（JEV → SC-03 → Pro）、固定 Pro L1 与 SC-39（JEV 一级置信不足 → Flash 兜底 → `off_topic_flash`），四例均 completed；数据库核对分类物理 ID 为 `uuid5(call_id, stage)`，JEV 上游 request_id 与分项 token/耗时已落库。真实决策 Provider 两位小数概率合计 0.99，适配器已做舍入归一化并加回归测试。
+- 浏览器：Web + Agent + PostgreSQL 实测 1440px 自动分类与 fixed Pro SC-39。1440/375px 均展示分类、特征、实际模型、JEV 主路/Flash 兜底、版本与分项耗时，375px 无横向溢出；每轮只发出 1 次 `/api/web/v1/models/calls`。截图见 `work/chat-routing-1440.png`、`work/chat-routing-375.png` 与 `work/chat-sc39-1440.png`。
+- 未验证：TypeSafe 官方 JEV 账号、768px 中间断点与完整键盘 Tab 顺序；控制台有一条非阻塞 404 资源告警。正式留出集准确率、门槛校准与性能收益不在本课范围。全仓 `pnpm format:check` 被既有 `.claude/settings.json` 软链接内容阻断，`pnpm test:tooling` 也仍有同一环境与临时目录 workspace 发现的既有失败；本次文件已单独格式化，未发现本次 `turbo.json` 测试缓存变量引入的新失败。
+
 ## 2026-11-22 · LLM Runtime 与平台模型路由
 
 [Feature 993 实施记录](../mai-specs/993-lesson-11-llm-runtime/IMPLEMENTATION.md)为本次证据真源。Agent 的 LLM Runtime、LiteLLM 生成适配与 System One 决策适配、三表配置与调用元记录、模型 HTTP/SSE 接口，Web 的平台模型管理、能力测试、租户只读摘要与 Chat 选模调用，以及契约、迁移与 SQL 交付已落地。

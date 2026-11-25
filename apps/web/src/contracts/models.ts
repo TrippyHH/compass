@@ -7,6 +7,11 @@ export type CatalogPage = components["schemas"]["CatalogPage"];
 export type SavedProvider = components["schemas"]["SavedProvider"];
 export type AvailableModels = components["schemas"]["AvailableModels"];
 export type CallResponse = components["schemas"]["CallResponse"];
+export type RoutedCallResponse = components["schemas"]["RoutedCallResponse"];
+export type Intent = components["schemas"]["Intent"];
+export type RoutingFeatures = components["schemas"]["RoutingFeatures"];
+export type ModelRoute = components["schemas"]["ModelRoute"];
+export type RoutingMetrics = components["schemas"]["RoutingMetrics"];
 export type CallRecordView = components["schemas"]["CallRecordView"];
 export type ModelChangePage = components["schemas"]["ModelChangePage"];
 export type ProviderCapabilities = ProviderView["capabilities"];
@@ -19,7 +24,7 @@ export type CallOutcome = Omit<
   "kind" | "text" | "tool_calls" | "answers" | "continuation_token"
 > & { continuation_token?: string | null };
 
-export type ModelEvent =
+export type DiagnosticModelEvent =
   | { type: "start"; call_id: string; provider_id: string; config_version: number }
   | { type: "text_delta"; call_id: string; text: string }
   | {
@@ -37,6 +42,35 @@ export type ModelEvent =
       reasoning_effort?: string | null;
     }
   | ({ type: "final" } & CallOutcome);
+
+export type ModelEvent = DiagnosticModelEvent;
+
+export type RoutedModelEvent =
+  | { type: "start"; call_id: string }
+  | { type: "classification_status"; call_id: string; stage: "jev" | "flash" }
+  | {
+      type: "route_selected";
+      call_id: string;
+      intent: Intent;
+      features: RoutingFeatures;
+      routing: ModelRoute;
+    }
+  | { type: "text_delta"; call_id: string; text: string }
+  | {
+      type: "tool_delta";
+      call_id: string;
+      index: number;
+      id?: string | null;
+      name?: string | null;
+      arguments: string;
+    }
+  | {
+      type: "reasoning_meta";
+      call_id: string;
+      thinking: boolean;
+      reasoning_effort?: string | null;
+    }
+  | ({ type: "final" } & RoutedCallResponse);
 
 export type AgentTrustedContext = {
   actor_user_id: string;
@@ -124,11 +158,50 @@ export const testCallInput = z.strictObject({
   input: modelInput,
 });
 
+export const mainModelSelection = z
+  .strictObject({
+    mode: z.enum(["fixed", "auto"]),
+    provider_id: uuid.optional(),
+  })
+  .superRefine((value, context) => {
+    if ((value.mode === "fixed") !== (value.provider_id !== undefined))
+      context.addIssue({
+        code: "custom",
+        path: ["provider_id"],
+        message: "fixed requires provider_id; auto must omit it",
+      });
+  });
+
+export const chatCallRequest = z
+  .strictObject({
+    call_id: uuid,
+    provider_id: uuid.optional(),
+    main_model: mainModelSelection.optional(),
+    input: generateInput,
+  })
+  .superRefine((value, context) => {
+    if ((value.provider_id === undefined) === (value.main_model === undefined))
+      context.addIssue({
+        code: "custom",
+        path: ["main_model"],
+        message: "provide either provider_id or main_model",
+      });
+  });
+
 export const chatCallInput = z.strictObject({
   call_id: uuid,
-  provider_id: uuid,
+  main_model: mainModelSelection,
   input: generateInput,
 });
+
+export function normalizeChatCall(value: ChatCallRequest): ChatCallInput {
+  const selection = value.main_model ?? { mode: "fixed" as const, provider_id: value.provider_id };
+  return chatCallInput.parse({
+    call_id: value.call_id,
+    main_model: selection,
+    input: value.input,
+  });
+}
 
 export const providerCreate = z.strictObject({
   operation_id: uuid,
@@ -175,7 +248,9 @@ export type CatalogQuery = z.infer<typeof catalogQuery>;
 export type ProviderCreateInput = z.infer<typeof providerCreate>;
 export type ProviderPatchInput = z.infer<typeof providerPatch>;
 export type TestCallInput = z.infer<typeof testCallInput>;
+export type ChatCallRequest = z.infer<typeof chatCallRequest>;
 export type ChatCallInput = z.infer<typeof chatCallInput>;
+export type MainModelSelection = z.infer<typeof mainModelSelection>;
 export type GenerateInput = z.infer<typeof generateInput>;
 export type DecisionInput = z.infer<typeof decisionInput>;
 export type ModelInput = z.infer<typeof modelInput>;

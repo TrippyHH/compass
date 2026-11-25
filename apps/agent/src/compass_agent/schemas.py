@@ -275,10 +275,31 @@ class TestCallInput(StrictModel):
     input: Annotated[GenerateInput | DecisionInput, Field(discriminator="kind")]
 
 
+class MainModelSelection(StrictModel):
+    mode: Literal["fixed", "auto"]
+    provider_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def validate_selection(self):
+        if (self.mode == "fixed") != (self.provider_id is not None):
+            raise ValueError("fixed requires provider_id; auto must omit it")
+        return self
+
+
 class ChatCallInput(StrictModel):
     call_id: UUID
-    provider_id: UUID
+    provider_id: UUID | None = None
+    main_model: MainModelSelection | None = None
     input: GenerateInput
+
+    @model_validator(mode="after")
+    def validate_selection(self):
+        if (self.provider_id is None) == (self.main_model is None):
+            raise ValueError("provide either provider_id or main_model")
+        return self
+
+    def selection(self) -> MainModelSelection:
+        return self.main_model or MainModelSelection(mode="fixed", provider_id=self.provider_id)
 
 
 class ModelUsage(StrictModel):
@@ -325,6 +346,46 @@ class CallResponse(CallOutcome):
     tool_calls: list[ToolCall] = Field(default_factory=list)
     answers: dict[str, DecisionAnswer] | None = None
     continuation_token: str | None = Field(default=None, repr=False)
+
+
+class Intent(StrictModel):
+    category_id: str = Field(max_length=80)
+    scene_id: str = Field(max_length=20)
+
+
+class RoutingFeatures(StrictModel):
+    task_type: str = Field(min_length=1, max_length=80)
+    difficulty: Literal["L1", "L2", "L3", "undetermined"]
+    response_mode: Literal["answer", "clarify", "refuse", "handoff"]
+    required_capabilities: list[str] = Field(default_factory=list, max_length=8)
+
+
+class ModelRoute(StrictModel):
+    mode: Literal["fixed", "auto"]
+    provider_id: UUID
+    model: str
+    reason: str
+    dictionary_version: str
+    routing_version: str
+
+
+class RoutingMetrics(StrictModel):
+    classifier_source: Literal["jev", "flash"] | None = None
+    fallback_reason: str | None = None
+    classification_calls: list[CallOutcome] = Field(default_factory=list, max_length=2)
+    duration_ms: int = 0
+    usage_complete: bool = False
+
+
+class RoutedCallResponse(StrictModel):
+    call_id: UUID
+    status: Literal["completed", "failed", "canceled", "incomplete"]
+    error_code: str | None = None
+    intent: Intent | None = None
+    features: RoutingFeatures | None = None
+    routing: ModelRoute | None = None
+    result: CallResponse | None = None
+    metrics: RoutingMetrics = Field(default_factory=RoutingMetrics)
 
 
 class CallRecordView(StrictModel):
@@ -382,6 +443,46 @@ class ModelEvent(
     RootModel[
         Annotated[
             StartEvent | TextDeltaEvent | ToolDeltaEvent | ReasoningMetaEvent | FinalEvent,
+            Field(discriminator="type"),
+        ]
+    ]
+):
+    pass
+
+
+class RoutingStartEvent(StrictModel):
+    type: Literal["start"] = "start"
+    call_id: UUID
+
+
+class ClassificationEvent(StrictModel):
+    type: Literal["classification_status"] = "classification_status"
+    call_id: UUID
+    stage: Literal["jev", "flash"]
+
+
+class RouteSelectedEvent(StrictModel):
+    type: Literal["route_selected"] = "route_selected"
+    call_id: UUID
+    intent: Intent
+    features: RoutingFeatures
+    routing: ModelRoute
+
+
+class RoutingFinalEvent(RoutedCallResponse):
+    type: Literal["final"] = "final"
+
+
+class RoutedModelEvent(
+    RootModel[
+        Annotated[
+            RoutingStartEvent
+            | ClassificationEvent
+            | RouteSelectedEvent
+            | TextDeltaEvent
+            | ToolDeltaEvent
+            | ReasoningMetaEvent
+            | RoutingFinalEvent,
             Field(discriminator="type"),
         ]
     ]

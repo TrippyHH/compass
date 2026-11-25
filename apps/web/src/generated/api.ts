@@ -254,6 +254,45 @@ export interface components {
             /** Items */
             items: components["schemas"]["AvailableModel"][];
         };
+        /** CallOutcome */
+        CallOutcome: {
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            /** Config Version */
+            config_version: number;
+            /** Duration Ms */
+            duration_ms: number;
+            /** Error Code */
+            error_code?: string | null;
+            /** Finish Reason */
+            finish_reason?: string | null;
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+            /** Requested Model */
+            requested_model: string;
+            /** Response Model */
+            response_model?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "failed" | "canceled" | "incomplete";
+            /**
+             * Upstream Outcome Unknown
+             * @default false
+             */
+            upstream_outcome_unknown: boolean;
+            /** Upstream Request Id */
+            upstream_request_id?: string | null;
+            usage?: components["schemas"]["ModelUsage"];
+            validation?: components["schemas"]["OutputValidation"];
+        };
         /** CallRecordView */
         CallRecordView: {
             /** Binding Version */
@@ -419,11 +458,9 @@ export interface components {
              */
             call_id: string;
             input: components["schemas"]["GenerateInput"];
-            /**
-             * Provider Id
-             * Format: uuid
-             */
-            provider_id: string;
+            main_model?: components["schemas"]["MainModelSelection"] | null;
+            /** Provider Id */
+            provider_id?: string | null;
         };
         /** ChatMessage */
         ChatMessage: {
@@ -608,6 +645,23 @@ export interface components {
              */
             status: "ok";
         };
+        /** Intent */
+        Intent: {
+            /** Category Id */
+            category_id: string;
+            /** Scene Id */
+            scene_id: string;
+        };
+        /** MainModelSelection */
+        MainModelSelection: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "fixed" | "auto";
+            /** Provider Id */
+            provider_id?: string | null;
+        };
         /** ModelCapabilities */
         ModelCapabilities: {
             json_output: components["schemas"]["Capability"];
@@ -658,6 +712,27 @@ export interface components {
              * Format: uuid
              */
             provider_id: string;
+        };
+        /** ModelRoute */
+        ModelRoute: {
+            /** Dictionary Version */
+            dictionary_version: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "fixed" | "auto";
+            /** Model */
+            model: string;
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+            /** Reason */
+            reason: string;
+            /** Routing Version */
+            routing_version: string;
         };
         /** ModelUsage */
         ModelUsage: {
@@ -813,6 +888,62 @@ export interface components {
             vendor: string;
             /** Version */
             version: number;
+        };
+        /** RoutedCallResponse */
+        RoutedCallResponse: {
+            /**
+             * Call Id
+             * Format: uuid
+             */
+            call_id: string;
+            /** Error Code */
+            error_code?: string | null;
+            features?: components["schemas"]["RoutingFeatures"] | null;
+            intent?: components["schemas"]["Intent"] | null;
+            metrics?: components["schemas"]["RoutingMetrics"];
+            result?: components["schemas"]["CallResponse"] | null;
+            routing?: components["schemas"]["ModelRoute"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "completed" | "failed" | "canceled" | "incomplete";
+        };
+        /** RoutingFeatures */
+        RoutingFeatures: {
+            /**
+             * Difficulty
+             * @enum {string}
+             */
+            difficulty: "L1" | "L2" | "L3" | "undetermined";
+            /** Required Capabilities */
+            required_capabilities?: string[];
+            /**
+             * Response Mode
+             * @enum {string}
+             */
+            response_mode: "answer" | "clarify" | "refuse" | "handoff";
+            /** Task Type */
+            task_type: string;
+        };
+        /** RoutingMetrics */
+        RoutingMetrics: {
+            /** Classification Calls */
+            classification_calls?: components["schemas"]["CallOutcome"][];
+            /** Classifier Source */
+            classifier_source?: ("jev" | "flash") | null;
+            /**
+             * Duration Ms
+             * @default 0
+             */
+            duration_ms: number;
+            /** Fallback Reason */
+            fallback_reason?: string | null;
+            /**
+             * Usage Complete
+             * @default false
+             */
+            usage_complete: boolean;
         };
         /** SavedProvider */
         SavedProvider: {
@@ -1027,7 +1158,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CallResponse"];
+                    "application/json": components["schemas"]["RoutedCallResponse"];
                 };
             };
             /** @description Validation Error */

@@ -115,7 +115,7 @@ CI 由本仓库的 [Compass workflow](.github/workflows/compass.yml) 执行。
 ## 当前能力边界
 
 - 示例接口显式启用 `COMPASS_DEMO_ENABLED=true` 后才开放，数据全部为固定合成数据。接口不接受租户、SQL 或自由代码输入；尚未接入真实经营数据。
-- 本地登录、数据库会话、租户与成员、个人权限、CSRF、设置、通知和审计已接入；LLM Runtime、平台模型路由、能力测试与分析 Chat 选模调用已接入。企业 OIDC、委托身份、Run / SSE、业务工具执行、Sandbox、EvalOps 留待后续 Feature。共享部署需配置 HTTPS、私有凭据及备份策略。
+- 本地登录、数据库会话、租户与成员、个人权限、CSRF、设置、通知和审计已接入；LLM Runtime、平台模型路由、能力测试与分析 Chat 已接入，第 12 课两级意图分类、只读场景字典、fixed/auto/SC-39 选模与分类兜底在统一 `models/calls` 内完成。企业 OIDC、委托身份、Run / SSE、业务工具执行、Sandbox、EvalOps 留待后续 Feature。共享部署需配置 HTTPS、私有凭据及备份策略。
 - Python 应用已创建：`agent`（原 agent-api）、`memory`、`worker`。memory 当前仅有服务健康检查，worker 仅有进程生命周期；普通分析 Runner、记忆业务、Temporal / Outbox 与共享执行包仍按 [实施任务](mai-specs/999-compass-product-course-landing-app/design/scaffold-design.md#8-部署收敛实施任务)推进。
 - 当前 Web 已搭齐原型框架；分析、报告、看板及 Agent/Memory 业务页面为空页。实现及验收见 [995](mai-specs/995-web-management-foundation/README.md)。
 - 本工程没有授予开源许可证；依赖许可证由各上游项目提供。

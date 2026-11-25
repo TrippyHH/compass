@@ -963,7 +963,7 @@ function ModelTestPanel({ provider, onClose }: { provider: ProviderView; onClose
     try {
       if (input.kind === "generate" && input.stream) {
         const drafts = new Map<number, ToolDraft>();
-        const handle = api.modelRequest(
+        const handle = api.modelRequest<ModelEvent>(
           `platform/models/${provider.id}/tests`,
           body,
           callId,

@@ -1,6 +1,6 @@
 import { sessionSchema } from "../contracts/page-schema";
 import type { PagePayload } from "../contracts/page";
-import type { ModelEvent } from "../contracts/models";
+import type { ModelEvent, RoutedModelEvent } from "../contracts/models";
 
 export class ApiError extends Error {
   status: number;
@@ -361,11 +361,11 @@ export class DocumentSession {
     }
   }
 
-  modelRequest(
+  modelRequest<E extends ModelEvent | RoutedModelEvent = RoutedModelEvent>(
     path: string,
     body: unknown,
     callId: string,
-    onEvent: (event: ModelEvent) => void,
+    onEvent: (event: E) => void,
   ): { done: Promise<void>; abort(): void } {
     const generation = this.generation;
     const controller = new AbortController();
@@ -419,7 +419,7 @@ export class DocumentSession {
               .map((line) => line.slice(5).trimStart())
               .join("\n");
             if (!data) continue;
-            const event = JSON.parse(data) as ModelEvent;
+            const event = JSON.parse(data) as E;
             if (event.call_id !== callId) throw new ApiError(503, "模型响应与本次调用不匹配。");
             if (finalSeen) throw new ApiError(503, "模型响应在结束后继续输出。");
             if (event.type === "final") finalSeen = true;

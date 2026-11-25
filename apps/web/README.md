@@ -1,6 +1,6 @@
 # Web / BFF
 
-Next.js App Router + React + TypeScript。UI 与 BFF 在一个 Node 服务中部署。已交付 [Feature 995](../../mai-specs/995-web-management-foundation/README.md) 的本地账号、数据库会话、租户与工作区、直接成员、固定模板和个人权限、个人设置、通知与审计，以及原型完整导航框架；并交付 [Feature 993](../../mai-specs/993-lesson-11-llm-runtime/BRIEF.md) 的平台模型路由、能力测试与分析 Chat 选模调用。报告、看板、插件、定时及 Agent/Memory 其余管理保留明确空页。
+Next.js App Router + React + TypeScript。UI 与 BFF 在一个 Node 服务中部署。已交付 [Feature 995](../../mai-specs/995-web-management-foundation/README.md) 的本地账号、数据库会话、租户与工作区、直接成员、固定模板和个人权限、个人设置、通知与审计，以及原型完整导航框架；并交付 [Feature 993](../../mai-specs/993-lesson-11-llm-runtime/BRIEF.md) 的平台模型路由、能力测试与分析 Chat 选模调用，以及 [Feature 992](../../mai-specs/992-lesson-12-multi-model-routing/BRIEF.md) 的两级分类、字典特征与 fixed/auto 路由。报告、看板、插件、定时及 Agent/Memory 其余管理保留明确空页。
 
 ## 启动与账号
 
@@ -30,10 +30,12 @@ pnpm dev -F web
 
 模型接入只有“管理与治理 → Agent 与能力 → 模型路由”一个页面入口：平台管理员在该页添加、编辑和测试模型；其他获权成员只读查看当前开放的生成模型摘要。BFF 通过 `/api/web/v1/platform/models/*`、`/models/available` 与 `/models/calls` 调用 Agent，浏览器不接触端点与凭据。
 
+分析 Chat 保留“指定模型 / 系统优化”；两者都只向 `/models/calls` 发送一次请求。服务端先做 JEV → Flash 兜底的两级分类，再由字典生成特征并选择本次主模型。BFF 接受旧顶层 `provider_id` 或新 `main_model` 并归一化为 `fixed`/`auto`，然后转发统一的 `intent/features/routing/result/metrics` 响应。
+
 - 管理接口只接受平台管理员；Chat 调用要求当前空间有效、`module.analysis` 与 `models.invoke` 两项权限。`models.invoke` 为独立可授权动作，升级不向旧成员静默授予；新分析师模板包含该动作。
 - 保存配置需要 `COMPASS_AGENT_SERVICE_TOKEN`；Agent 同时需要 `COMPASS_MODEL_ENCRYPTION_KEY`。缺少时模型接口返回明确不可用，Web 基础功能仍可运行。
-- 模型测试与 Chat 使用 POST + fetch 读取 SSE，BFF 校验每个事件、call_id、final 唯一性与单帧大小，未知事件会关闭流并显示“未完成”。停止调用会中断上游请求。
-- 分析页默认向支持 Thinking 的模型传递 `thinking=true`、`reasoning_effort=high`；不展示 Thinking 或搜索开关。附件仅保留在本页内存，最多 10 个，暂不发送给模型。
+- 模型测试与 Chat 使用 POST + fetch 读取 SSE，BFF 校验每个事件、call_id、final 唯一性与单帧大小，未知事件会关闭流并显示“未完成”。统一 Chat 事件为 `start → classification_status/route_selected → text_delta → final`；分类兜底时显示“正在使用备用分类模型识别任务”，停止会中断在途分类或推理。
+- Chat 回复下方展示分类、字典特征、实际模型、命中规则、字典/契约版本和分类/推理分项消耗；“查看选择原因”可展开。指定模型时向支持 Thinking 的模型传递 `thinking=true`、`reasoning_effort=high`；系统优化不预判模型，使用不启用 Thinking 的通用输入。附件仅保留在本页内存，最多 10 个，暂不发送给模型。
 - Web 迁移 `0003_model_invocation_permission` 只调整权限 CHECK 上限与允许值；页面与会话状态不写入服务端历史。
 
 ## 工程边界

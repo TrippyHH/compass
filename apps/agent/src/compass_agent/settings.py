@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,6 +15,11 @@ class Settings(BaseSettings):
     # Exact HTTPS origins allowed for provider endpoints; comma separated.
     compass_model_allowed_origins: str = "https://api.deepseek.com,https://api.typesafe.ai"
     compass_model_allow_local_http: bool = True
+    # Lesson 12 routing: classification mode and the Provider bound to each role.
+    compass_routing_mode: Literal["jev_with_flash", "flash_only"] = "jev_with_flash"
+    compass_routing_jev_provider_id: str = ""
+    compass_routing_flash_provider_id: str = ""
+    compass_routing_pro_provider_id: str = ""
 
 
 @lru_cache

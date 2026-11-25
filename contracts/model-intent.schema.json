@@ -1,0 +1,21 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "category_id": {
+      "maxLength": 80,
+      "title": "Category Id",
+      "type": "string"
+    },
+    "scene_id": {
+      "maxLength": 20,
+      "title": "Scene Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "category_id",
+    "scene_id"
+  ],
+  "title": "Intent",
+  "type": "object"
+}

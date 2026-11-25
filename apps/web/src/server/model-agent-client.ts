@@ -9,6 +9,10 @@ import {
   parseProvider,
   parseProviderPage,
   parseProviderView,
+  type FixedSelection,
+  assertFixedRoute,
+  parseRoutedCallResponse,
+  parseRoutedModelEvent,
 } from "../lib/model-contracts";
 import { ApplicationError } from "./platform/errors";
 import type {
@@ -23,6 +27,7 @@ import type {
   ProviderPage,
   ProviderPatchInput,
   ProviderView,
+  RoutedCallResponse,
   SavedProvider,
   TestCallInput,
 } from "../contracts/models";
@@ -210,8 +215,8 @@ export const modelAgentClient = {
     context: AgentTrustedContext,
     body: ChatCallInput,
     signal?: AbortSignal,
-  ): Promise<CallResponse> {
-    return json("/v1/models/calls", { context, body, signal }, parseCallResponse);
+  ): Promise<RoutedCallResponse> {
+    return json("/v1/models/calls", { context, body, signal }, parseRoutedCallResponse);
   },
   openTestStream(
     context: AgentTrustedContext,
@@ -235,14 +240,21 @@ export const modelAgentClient = {
   },
 };
 
-export function relayModelEvents(upstream: Response, callId: string): ReadableStream<Uint8Array> {
+export function relayModelEvents(
+  upstream: Response,
+  callId: string,
+  routed = false,
+  selection?: FixedSelection,
+): ReadableStream<Uint8Array> {
   const body = upstream.body;
   if (!body) throw new ApplicationError("unavailable", "模型服务未返回流式响应。");
   const reader = body.getReader();
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   let buffer = "";
+  let started = false;
   let finalSeen = false;
+  let routeSeen = false;
   return new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
@@ -265,12 +277,33 @@ export function relayModelEvents(upstream: Response, callId: string): ReadableSt
             if (!data) continue;
             let event;
             try {
-              event = parseModelEvent(JSON.parse(data));
+              const frame = JSON.parse(data);
+              event = routed ? parseRoutedModelEvent(frame) : parseModelEvent(frame);
             } catch {
               throw new Error("Invalid model event");
             }
             if (event.call_id !== callId) throw new Error("Mismatched model call id");
             if (finalSeen) throw new Error("Model event after final");
+            if (!started) {
+              if (event.type !== "start") throw new Error("Model stream must start with start");
+              started = true;
+            } else if (event.type === "start") {
+              throw new Error("Duplicate model start event");
+            }
+            if (routed && event.type === "route_selected") {
+              if (routeSeen) throw new Error("Duplicate route selection");
+              assertFixedRoute(
+                { intent: event.intent, routing: event.routing },
+                selection ?? { mode: "auto" },
+              );
+              routeSeen = true;
+            }
+            if (
+              routed &&
+              (event.type === "text_delta" || event.type === "tool_delta") &&
+              !routeSeen
+            )
+              throw new Error("Model output before route selection");
             if (event.type === "final") finalSeen = true;
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
           }

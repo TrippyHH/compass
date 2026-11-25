@@ -1,0 +1,460 @@
+{
+  "version": "sha256:e5bd5357d5cad19c75aa86b63f95edef9b9f85c85a52a11eac3360c2a83ebcae",
+  "source": "任务场景与分流标准答案（工作簿派生，仅含场景与默认特征）",
+  "categories": [
+    {
+      "category_id": "business_channel",
+      "name": "经营与渠道"
+    },
+    {
+      "category_id": "marketing_member",
+      "name": "营销与会员"
+    },
+    {
+      "category_id": "ecommerce_product",
+      "name": "电商与产品"
+    },
+    {
+      "category_id": "trade_fulfillment",
+      "name": "交易与履约"
+    },
+    {
+      "category_id": "product_inventory",
+      "name": "商品与库存"
+    },
+    {
+      "category_id": "region_store",
+      "name": "区域与门店"
+    },
+    {
+      "category_id": "data_semantics",
+      "name": "数据与语义"
+    },
+    {
+      "category_id": "report_collaboration",
+      "name": "报告与协作"
+    },
+    {
+      "category_id": "platform_runtime",
+      "name": "平台运行"
+    },
+    {
+      "category_id": "input_boundary",
+      "name": "输入与执行边界"
+    }
+  ],
+  "scenes": [
+    {
+      "scene_id": "SC-01",
+      "category_id": "business_channel",
+      "name": "指标快查",
+      "description": "查看单个经营指标的当前值或口径。",
+      "task_type": "metric_lookup",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-02",
+      "category_id": "business_channel",
+      "name": "趋势比较",
+      "description": "比较两个时段、渠道或门店的汇总指标变化。",
+      "task_type": "metric_comparison",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-03",
+      "category_id": "business_channel",
+      "name": "销售下降诊断",
+      "description": "结合多维数据定位销售下降的原因并给出排查建议。",
+      "task_type": "diagnosis",
+      "difficulty": "L3",
+      "response_mode": "answer",
+      "required_capabilities": [
+        "thinking"
+      ]
+    },
+    {
+      "scene_id": "SC-04",
+      "category_id": "business_channel",
+      "name": "促销贡献拆解",
+      "description": "拆解促销活动对各渠道、品类销售与利润的贡献。",
+      "task_type": "contribution",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-05",
+      "category_id": "marketing_member",
+      "name": "成熟退款回报",
+      "description": "按成熟退款口径评估投放与活动的真实回报。",
+      "task_type": "retention_analysis",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-06",
+      "category_id": "marketing_member",
+      "name": "获客比较",
+      "description": "比较不同渠道的获客成本、转化与增量。",
+      "task_type": "acquisition_comparison",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-07",
+      "category_id": "marketing_member",
+      "name": "投放建议",
+      "description": "根据已有数据给出投放预算与人群优化建议。",
+      "task_type": "campaign_advice",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-08",
+      "category_id": "ecommerce_product",
+      "name": "漏斗查看",
+      "description": "查看浏览、加购、下单、支付等漏斗环节转化。",
+      "task_type": "funnel_inspection",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-09",
+      "category_id": "ecommerce_product",
+      "name": "转化诊断",
+      "description": "诊断转化率下降的环节、人群与商品原因。",
+      "task_type": "conversion_diagnosis",
+      "difficulty": "L3",
+      "response_mode": "answer",
+      "required_capabilities": [
+        "thinking"
+      ]
+    },
+    {
+      "scene_id": "SC-10",
+      "category_id": "trade_fulfillment",
+      "name": "订单对账",
+      "description": "核对订单、支付、退款与履约记录的一致性。",
+      "task_type": "reconciliation",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-11",
+      "category_id": "product_inventory",
+      "name": "缺码盘点",
+      "description": "盘点商品缺码、断码与尺码结构。",
+      "task_type": "size_gap",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-12",
+      "category_id": "product_inventory",
+      "name": "调拨建议",
+      "description": "给出跨门店或跨仓库的库存调拨建议。",
+      "task_type": "transfer_advice",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-13",
+      "category_id": "product_inventory",
+      "name": "库存老化",
+      "description": "分析库存库龄、周转与滞销风险。",
+      "task_type": "inventory_ageing",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-14",
+      "category_id": "product_inventory",
+      "name": "需求预测",
+      "description": "根据历史销售与库存预测未来需求。",
+      "task_type": "demand_forecast",
+      "difficulty": "L3",
+      "response_mode": "answer",
+      "required_capabilities": [
+        "thinking"
+      ]
+    },
+    {
+      "scene_id": "SC-15",
+      "category_id": "region_store",
+      "name": "新老店拆解",
+      "description": "拆解新店与老店在客流、销售与转化上的差异。",
+      "task_type": "store_comparison",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-16",
+      "category_id": "region_store",
+      "name": "门店排名与目标差距",
+      "description": "按目标完成率对门店排名并解释差距。",
+      "task_type": "store_ranking",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-17",
+      "category_id": "marketing_member",
+      "name": "复购与分群",
+      "description": "分析会员复购、生命周期与分群特征。",
+      "task_type": "cohort_analysis",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-18",
+      "category_id": "marketing_member",
+      "name": "实验评估",
+      "description": "评估实验组与对照组在核心指标上的差异。",
+      "task_type": "experiment_evaluation",
+      "difficulty": "L3",
+      "response_mode": "answer",
+      "required_capabilities": [
+        "thinking"
+      ]
+    },
+    {
+      "scene_id": "SC-19",
+      "category_id": "trade_fulfillment",
+      "name": "退货诊断",
+      "description": "诊断退货率变化的原因与商品、渠道结构。",
+      "task_type": "return_diagnosis",
+      "difficulty": "L3",
+      "response_mode": "answer",
+      "required_capabilities": [
+        "thinking"
+      ]
+    },
+    {
+      "scene_id": "SC-20",
+      "category_id": "trade_fulfillment",
+      "name": "履约与补货延迟",
+      "description": "分析订单履约、发货与补货延迟。",
+      "task_type": "fulfillment_delay",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-21",
+      "category_id": "data_semantics",
+      "name": "指标解释",
+      "description": "解释指标定义、计算口径与适用边界。",
+      "task_type": "metric_explanation",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-22",
+      "category_id": "data_semantics",
+      "name": "SQL 生成",
+      "description": "把业务数据问题转换为可复核的 SQL 查询。",
+      "task_type": "sql_generation",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-23",
+      "category_id": "data_semantics",
+      "name": "质量检查",
+      "description": "检查数据完整性、重复、缺失与异常值。",
+      "task_type": "quality_check",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-24",
+      "category_id": "data_semantics",
+      "name": "数据整理",
+      "description": "整理并规范化用户提供的表格或原始数据。",
+      "task_type": "data_cleaning",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-25",
+      "category_id": "report_collaboration",
+      "name": "图表生成",
+      "description": "把给定数据整理为合适的图表并与结论对应。",
+      "task_type": "chart_generation",
+      "difficulty": "L1",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-26",
+      "category_id": "report_collaboration",
+      "name": "报告组织",
+      "description": "根据已有材料组织一份经营分析报告。",
+      "task_type": "report_writing",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-27",
+      "category_id": "report_collaboration",
+      "name": "结论核对",
+      "description": "核对已有结论与所依据的数据、口径是否一致。",
+      "task_type": "conclusion_check",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-28",
+      "category_id": "marketing_member",
+      "name": "会员活动复盘",
+      "description": "复盘会员活动的参与、转化与长期价值。",
+      "task_type": "member_campaign_review",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-29",
+      "category_id": "report_collaboration",
+      "name": "周期任务",
+      "description": "登记周期性分析任务或定期产出要求。",
+      "task_type": "recurring_task",
+      "difficulty": "L2",
+      "response_mode": "handoff",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-30",
+      "category_id": "report_collaboration",
+      "name": "监测草案",
+      "description": "起草指标监测口径、阈值与告警草案。",
+      "task_type": "monitoring_draft",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-31",
+      "category_id": "platform_runtime",
+      "name": "运行记录分析",
+      "description": "从脱敏运行记录分析性能、失败与调用分布。",
+      "task_type": "runtime_diagnosis",
+      "difficulty": "L3",
+      "response_mode": "answer",
+      "required_capabilities": [
+        "thinking"
+      ]
+    },
+    {
+      "scene_id": "SC-32",
+      "category_id": "ecommerce_product",
+      "name": "流程改进建议",
+      "description": "根据现状数据给出流程或产品改进建议。",
+      "task_type": "process_improvement",
+      "difficulty": "L2",
+      "response_mode": "answer",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-33",
+      "category_id": "input_boundary",
+      "name": "缺信息",
+      "description": "缺少关键信息，需要先向用户澄清。",
+      "task_type": "clarify_input",
+      "difficulty": "undetermined",
+      "response_mode": "clarify",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-34",
+      "category_id": "input_boundary",
+      "name": "多轮指代",
+      "description": "多轮指代需要确认对象或时间范围。",
+      "task_type": "reference_resolution",
+      "difficulty": "undetermined",
+      "response_mode": "clarify",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-35",
+      "category_id": "input_boundary",
+      "name": "数据不足",
+      "description": "给定数据不足以支撑结论，需要补充材料。",
+      "task_type": "insufficient_data",
+      "difficulty": "undetermined",
+      "response_mode": "clarify",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-36",
+      "category_id": "input_boundary",
+      "name": "外部动作",
+      "description": "要求执行下单、发信、改价等外部动作。",
+      "task_type": "external_action",
+      "difficulty": "undetermined",
+      "response_mode": "handoff",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-37",
+      "category_id": "input_boundary",
+      "name": "越权请求",
+      "description": "请求未授权的数据、范围或其他租户信息。",
+      "task_type": "unauthorized_access",
+      "difficulty": "undetermined",
+      "response_mode": "refuse",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-38",
+      "category_id": "input_boundary",
+      "name": "管理操作",
+      "description": "请求账号、权限、配置等管理操作。",
+      "task_type": "admin_operation",
+      "difficulty": "undetermined",
+      "response_mode": "handoff",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-39",
+      "category_id": "input_boundary",
+      "name": "范围外",
+      "description": "闲聊、故事、娱乐或其他非经营分析任务。",
+      "task_type": "off_topic",
+      "difficulty": "undetermined",
+      "response_mode": "refuse",
+      "required_capabilities": []
+    },
+    {
+      "scene_id": "SC-40",
+      "category_id": "input_boundary",
+      "name": "复合任务",
+      "description": "包含多个目标或需要拆分的复合任务。",
+      "task_type": "compound_task",
+      "difficulty": "undetermined",
+      "response_mode": "clarify",
+      "required_capabilities": []
+    }
+  ]
+}

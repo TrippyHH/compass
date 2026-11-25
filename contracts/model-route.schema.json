@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "dictionary_version": {
+      "title": "Dictionary Version",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "fixed",
+        "auto"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "provider_id": {
+      "format": "uuid",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "routing_version": {
+      "title": "Routing Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "mode",
+    "provider_id",
+    "model",
+    "reason",
+    "dictionary_version",
+    "routing_version"
+  ],
+  "title": "ModelRoute",
+  "type": "object"
+}

@@ -9,10 +9,16 @@ from compass_agent.schemas import (
     CallResponse,
     CatalogPage,
     DemoOverview,
+    Intent,
     ModelChangePage,
     ModelEvent,
+    ModelRoute,
     ProviderPage,
     ProviderView,
+    RoutedCallResponse,
+    RoutedModelEvent,
+    RoutingFeatures,
+    RoutingMetrics,
     SavedProvider,
 )
 
@@ -29,6 +35,12 @@ schemas = {
     "model-provider-page.schema.json": ProviderPage,
     "model-provider-view.schema.json": ProviderView,
     "model-saved-provider.schema.json": SavedProvider,
+    "model-intent.schema.json": Intent,
+    "model-routing-features.schema.json": RoutingFeatures,
+    "model-route.schema.json": ModelRoute,
+    "model-routing-metrics.schema.json": RoutingMetrics,
+    "model-routed-call-response.schema.json": RoutedCallResponse,
+    "model-routed-event.schema.json": RoutedModelEvent,
 }
 for name, schema in [
     ("openapi.json", app.openapi()),

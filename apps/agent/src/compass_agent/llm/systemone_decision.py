@@ -114,8 +114,14 @@ def _probabilities(raw: object, keys: set[str]) -> dict[str, float]:
         if number is None or number < 0:
             raise RuntimeFailure("provider_protocol_error")
         values[str(key)] = number
-    if abs(sum(values.values()) - 1.0) > 1e-3:
+    total = sum(values.values())
+    # Real decision providers round each probability to two decimals, so a valid
+    # distribution can add up to e.g. 0.99. Normalize small rounding drift while
+    # still rejecting a materially malformed distribution.
+    if total <= 0 or abs(total - 1.0) > 0.05:
         raise RuntimeFailure("provider_protocol_error")
+    if abs(total - 1.0) > 1e-9:
+        values = {key: value / total for key, value in values.items()}
     return values
 
 
@@ -258,7 +264,7 @@ class SystemOneDecisionAdapter:
         progress = session.progress
         progress.usage = _usage(decoded.get("usage"))
         progress.response_model = decoded.get("model")
-        progress.upstream_request_id = decoded.get("id") or request_id
+        progress.upstream_request_id = decoded.get("id") or decoded.get("request_id") or request_id
         progress.finish_reason = "stop"
         progress.normal_eof = True
         progress.validation = OutputValidation(status="valid", mode="decision")

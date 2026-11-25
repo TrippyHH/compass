@@ -188,7 +188,7 @@ def test_capability_rejection_happens_before_placeholder(engine) -> None:
         return captured.value, missing.value
 
     error, missing = asyncio.run(scenario())
-    assert error.code == "validation_failed"
+    assert error.code == "capability_not_supported"
     assert missing.code == "not_found"
     assert adapter.calls == 0
 

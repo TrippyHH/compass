@@ -1,0 +1,750 @@
+{
+  "$defs": {
+    "CallOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "config_version": {
+          "title": "Config Version",
+          "type": "integer"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "finish_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finish Reason"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "requested_model": {
+          "title": "Requested Model",
+          "type": "string"
+        },
+        "response_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Model"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "canceled",
+            "incomplete"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "upstream_outcome_unknown": {
+          "default": false,
+          "title": "Upstream Outcome Unknown",
+          "type": "boolean"
+        },
+        "upstream_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upstream Request Id"
+        },
+        "usage": {
+          "$ref": "#/$defs/ModelUsage"
+        },
+        "validation": {
+          "$ref": "#/$defs/OutputValidation"
+        }
+      },
+      "required": [
+        "call_id",
+        "provider_id",
+        "config_version",
+        "status",
+        "duration_ms",
+        "requested_model"
+      ],
+      "title": "CallOutcome",
+      "type": "object"
+    },
+    "CallResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "answers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/DecisionAnswer"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Answers"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "config_version": {
+          "title": "Config Version",
+          "type": "integer"
+        },
+        "continuation_token": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuation Token"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "finish_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finish Reason"
+        },
+        "kind": {
+          "enum": [
+            "generate",
+            "decision"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "requested_model": {
+          "title": "Requested Model",
+          "type": "string"
+        },
+        "response_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Model"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "canceled",
+            "incomplete"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "text": {
+          "default": "",
+          "title": "Text",
+          "type": "string"
+        },
+        "tool_calls": {
+          "items": {
+            "$ref": "#/$defs/ToolCall"
+          },
+          "title": "Tool Calls",
+          "type": "array"
+        },
+        "upstream_outcome_unknown": {
+          "default": false,
+          "title": "Upstream Outcome Unknown",
+          "type": "boolean"
+        },
+        "upstream_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upstream Request Id"
+        },
+        "usage": {
+          "$ref": "#/$defs/ModelUsage"
+        },
+        "validation": {
+          "$ref": "#/$defs/OutputValidation"
+        }
+      },
+      "required": [
+        "call_id",
+        "provider_id",
+        "config_version",
+        "status",
+        "duration_ms",
+        "requested_model",
+        "kind"
+      ],
+      "title": "CallResponse",
+      "type": "object"
+    },
+    "DecisionAnswer": {
+      "additionalProperties": false,
+      "properties": {
+        "choice": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Choice"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "legend": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "items": {},
+                    "type": "array"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legend"
+        },
+        "noul": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Noul"
+        },
+        "probabilities": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Probabilities"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        },
+        "type": {
+          "enum": [
+            "choice",
+            "noul",
+            "score"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "DecisionAnswer",
+      "type": "object"
+    },
+    "Intent": {
+      "additionalProperties": false,
+      "properties": {
+        "category_id": {
+          "maxLength": 80,
+          "title": "Category Id",
+          "type": "string"
+        },
+        "scene_id": {
+          "maxLength": 20,
+          "title": "Scene Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category_id",
+        "scene_id"
+      ],
+      "title": "Intent",
+      "type": "object"
+    },
+    "ModelRoute": {
+      "additionalProperties": false,
+      "properties": {
+        "dictionary_version": {
+          "title": "Dictionary Version",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "fixed",
+            "auto"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "routing_version": {
+          "title": "Routing Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "provider_id",
+        "model",
+        "reason",
+        "dictionary_version",
+        "routing_version"
+      ],
+      "title": "ModelRoute",
+      "type": "object"
+    },
+    "ModelUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "reasoning_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasoning Tokens"
+        }
+      },
+      "title": "ModelUsage",
+      "type": "object"
+    },
+    "OutputValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "text",
+          "enum": [
+            "text",
+            "json",
+            "schema",
+            "decision"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "status": {
+          "default": "not_requested",
+          "enum": [
+            "not_requested",
+            "valid",
+            "invalid"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "OutputValidation",
+      "type": "object"
+    },
+    "RoutingFeatures": {
+      "additionalProperties": false,
+      "properties": {
+        "difficulty": {
+          "enum": [
+            "L1",
+            "L2",
+            "L3",
+            "undetermined"
+          ],
+          "title": "Difficulty",
+          "type": "string"
+        },
+        "required_capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Required Capabilities",
+          "type": "array"
+        },
+        "response_mode": {
+          "enum": [
+            "answer",
+            "clarify",
+            "refuse",
+            "handoff"
+          ],
+          "title": "Response Mode",
+          "type": "string"
+        },
+        "task_type": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Task Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_type",
+        "difficulty",
+        "response_mode"
+      ],
+      "title": "RoutingFeatures",
+      "type": "object"
+    },
+    "RoutingMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "classification_calls": {
+          "items": {
+            "$ref": "#/$defs/CallOutcome"
+          },
+          "maxItems": 2,
+          "title": "Classification Calls",
+          "type": "array"
+        },
+        "classifier_source": {
+          "anyOf": [
+            {
+              "enum": [
+                "jev",
+                "flash"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Classifier Source"
+        },
+        "duration_ms": {
+          "default": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "fallback_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Reason"
+        },
+        "usage_complete": {
+          "default": false,
+          "title": "Usage Complete",
+          "type": "boolean"
+        }
+      },
+      "title": "RoutingMetrics",
+      "type": "object"
+    },
+    "ToolCall": {
+      "additionalProperties": false,
+      "properties": {
+        "function": {
+          "$ref": "#/$defs/ToolCallFunction"
+        },
+        "id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "function",
+          "default": "function",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function"
+      ],
+      "title": "ToolCall",
+      "type": "object"
+    },
+    "ToolCallFunction": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "title": "Arguments",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments"
+      ],
+      "title": "ToolCallFunction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "call_id": {
+      "format": "uuid",
+      "title": "Call Id",
+      "type": "string"
+    },
+    "error_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Code"
+    },
+    "features": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RoutingFeatures"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "intent": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Intent"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "metrics": {
+      "$ref": "#/$defs/RoutingMetrics"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CallResponse"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "routing": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelRoute"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "failed",
+        "canceled",
+        "incomplete"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "call_id",
+    "status"
+  ],
+  "title": "RoutedCallResponse",
+  "type": "object"
+}

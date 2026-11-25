@@ -516,6 +516,36 @@ class ModelRepository:
             ).all()
             return [_state(row) for row in rows]
 
+    def routing_provider(self, role: str, configured: str) -> ProviderState:
+        """Resolve one code-configured routing role to an enabled Provider.
+
+        The binding is deliberately code/environment-owned: no browser input and no
+        database policy row can add a role or widen the candidate set.
+        """
+
+        if not configured:
+            raise ModelError("route_binding_missing", f"路由角色 {role} 未配置 Provider。")
+        try:
+            provider_id = UUID(configured)
+        except ValueError as exc:
+            raise ModelError(
+                "route_binding_missing", f"路由角色 {role} 的 Provider 标识无效。"
+            ) from exc
+        try:
+            state = self.provider(provider_id)
+        except ModelError as exc:
+            if exc.code == "not_found":
+                raise ModelError(
+                    "route_binding_missing", f"路由角色 {role} 的 Provider 不存在。"
+                ) from exc
+            raise
+        if not state.enabled:
+            raise ModelError("route_binding_missing", f"路由角色 {role} 的 Provider 已停用。")
+        expected = ("decision", "systemone_decision") if role == "jev" else ("llm", "litellm_chat")
+        if (state.kind, state.adapter) != expected:
+            raise ModelError("route_binding_missing", f"路由角色 {role} 的 Provider 类型不匹配。")
+        return state
+
     # -- calls -------------------------------------------------------------
 
     def place_call(self, command: BeginCallCommand) -> tuple[ModelSpec, str, CallPolicy]:

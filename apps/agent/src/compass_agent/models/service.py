@@ -50,7 +50,7 @@ from compass_agent.schemas import (
     TrustedContext,
 )
 
-from . import PreparedCall, secrets, validation
+from . import PreparedCall, RoutingGrant, secrets, validation
 from .errors import ModelError
 from .repository import (
     BeginCallCommand,
@@ -368,6 +368,47 @@ class ModelService:
         prepared = await self.prepare_chat(command, context)
         return await self.execute(prepared, emit=emit, disconnect=disconnect)
 
+    @property
+    def repository(self) -> ModelRepository:
+        return self._repository
+
+    async def prepare(
+        self,
+        call_id: UUID,
+        provider_id: UUID,
+        value: GenerateInput | DecisionInput,
+        context: TrustedContext,
+        *,
+        deadline_at: datetime | None = None,
+        grant: RoutingGrant | None = None,
+    ) -> PreparedExecution:
+        """Prepare one leaf call for the routing service.
+
+        deadline_at keeps the parent round budget; a classification stage passes
+        the smaller of the parent and stage deadlines. The grant authorizes only the
+        in-process classification provider and never widens browser input.
+        """
+
+        self._require_tenant(context, {"chat"})
+        return await self._prepare(
+            provider_id,
+            call_id,
+            value,
+            context,
+            purpose="chat",
+            deadline_at=deadline_at,
+            grant=grant,
+        )
+
+    async def run(
+        self,
+        prepared: PreparedExecution,
+        *,
+        emit: Callable[[Any], Awaitable[None]] | None = None,
+        disconnect: Callable[[], Awaitable[None]] | None = None,
+    ) -> CallResponse:
+        return await self.execute(prepared, emit=emit, disconnect=disconnect)
+
     async def prepare_test(
         self,
         provider_id: UUID,
@@ -382,8 +423,11 @@ class ModelService:
         self, command: ChatCallInput, context: TrustedContext
     ) -> PreparedExecution:
         self._require_tenant(context, {"chat"})
+        selection = command.selection()
+        if selection.provider_id is None:
+            raise ModelError("route_binding_missing", "自动选模需要通过路由服务。")
         return await self._prepare(
-            command.provider_id,
+            selection.provider_id,
             command.call_id,
             command.input,
             context,
@@ -398,15 +442,19 @@ class ModelService:
         context: TrustedContext,
         *,
         purpose: str,
+        deadline_at: datetime | None = None,
+        grant: RoutingGrant | None = None,
     ) -> PreparedExecution:
         started_at = _utcnow()
-        deadline_at = deadline_from(started_at)
+        deadline_at = deadline_at or deadline_from(started_at)
+        if deadline_at <= started_at:
+            raise ModelError("model_timeout", "本次调用已超过父时限。")
         started_monotonic = time.monotonic()
         mode = "diagnostic" if purpose == "test" else "verified"
         holder: dict[str, Any] = {}
 
         def validate(state: ProviderState) -> None:
-            self._validate_call_state(state, value, context, purpose, mode)
+            self._validate_call_state(state, value, context, purpose, mode, call_id, grant)
             try:
                 validation.validate_base_url(state.base_url, required=state.kind == "decision")
             except ModelError:
@@ -496,17 +544,24 @@ class ModelService:
         context: TrustedContext,
         purpose: str,
         mode: str,
+        call_id: UUID,
+        grant: RoutingGrant | None = None,
     ) -> None:
         spec = self._spec(state)
         if purpose == "chat":
             if context.scope.kind != "tenant":
                 raise ModelError("forbidden")
-            if not capability_rules.chat_supported(spec.kind, spec.adapter):
-                raise ModelError("chat_model_not_supported", "决策模型仅支持管理端测试。")
-            if not state.enabled or not state.chat_visible:
-                raise ModelError("model_unavailable", "当前模型已不可用，请重新选择。")
-            if not isinstance(value, GenerateInput):
-                raise ModelError("chat_model_not_supported", "Chat 仅接受生成模型输入。")
+            if grant is not None:
+                self._validate_grant(grant, state, context, call_id, value)
+                if not state.enabled:
+                    raise ModelError("model_unavailable", "当前模型已不可用，请重新选择。")
+            else:
+                if not capability_rules.chat_supported(spec.kind, spec.adapter):
+                    raise ModelError("chat_model_not_supported", "决策模型仅支持管理端测试。")
+                if not state.enabled or not state.chat_visible:
+                    raise ModelError("model_unavailable", "当前模型已不可用，请重新选择。")
+                if not isinstance(value, GenerateInput):
+                    raise ModelError("chat_model_not_supported", "Chat 仅接受生成模型输入。")
         else:
             if context.scope.kind != "platform":
                 raise ModelError("forbidden")
@@ -517,7 +572,39 @@ class ModelService:
         try:
             capability_rules.validate_input(spec, value, mode)
         except RuntimeFailure as exc:
-            raise ModelError("validation_failed", _capability_message(exc.error.code)) from exc
+            code = (
+                "capability_not_supported"
+                if exc.error.code == "capability_not_supported"
+                else "validation_failed"
+            )
+            raise ModelError(code, _capability_message(exc.error.code)) from exc
+
+    @staticmethod
+    def _validate_grant(
+        grant: RoutingGrant,
+        state: ProviderState,
+        context: TrustedContext,
+        call_id: UUID,
+        value: GenerateInput | DecisionInput,
+    ) -> None:
+        if (
+            grant.actor_user_id != context.actor_user_id
+            or grant.scope != context.scope
+            or grant.call_id != call_id
+            or grant.provider_id != state.id
+        ):
+            raise ModelError("forbidden")
+        if grant.stage in {"intent_jev", "intent_flash"}:
+            if state.kind == "decision":
+                if not isinstance(value, DecisionInput):
+                    raise ModelError("validation_failed", "JEV 分类需要决策输入。")
+                if state.adapter != "systemone_decision":
+                    raise ModelError("route_binding_missing", "JEV 分类角色绑定无效。")
+            else:
+                if not isinstance(value, GenerateInput):
+                    raise ModelError("validation_failed", "Flash 分类需要生成输入。")
+                if state.adapter != "litellm_chat":
+                    raise ModelError("route_binding_missing", "Flash 分类角色绑定无效。")
 
     async def _run_runtime(
         self,
@@ -670,6 +757,9 @@ class ModelService:
             kind=kind,
             adapter=adapter,
         )
+
+    def spec_for(self, state: ProviderState) -> ModelSpec:
+        return self._spec(state)
 
     @staticmethod
     def _spec(state: ProviderState) -> ModelSpec:

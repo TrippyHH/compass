@@ -1,0 +1,242 @@
+{
+  "$defs": {
+    "CallOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "config_version": {
+          "title": "Config Version",
+          "type": "integer"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "finish_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finish Reason"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "requested_model": {
+          "title": "Requested Model",
+          "type": "string"
+        },
+        "response_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Model"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "canceled",
+            "incomplete"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "upstream_outcome_unknown": {
+          "default": false,
+          "title": "Upstream Outcome Unknown",
+          "type": "boolean"
+        },
+        "upstream_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upstream Request Id"
+        },
+        "usage": {
+          "$ref": "#/$defs/ModelUsage"
+        },
+        "validation": {
+          "$ref": "#/$defs/OutputValidation"
+        }
+      },
+      "required": [
+        "call_id",
+        "provider_id",
+        "config_version",
+        "status",
+        "duration_ms",
+        "requested_model"
+      ],
+      "title": "CallOutcome",
+      "type": "object"
+    },
+    "ModelUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "reasoning_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasoning Tokens"
+        }
+      },
+      "title": "ModelUsage",
+      "type": "object"
+    },
+    "OutputValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "text",
+          "enum": [
+            "text",
+            "json",
+            "schema",
+            "decision"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Paths",
+          "type": "array"
+        },
+        "status": {
+          "default": "not_requested",
+          "enum": [
+            "not_requested",
+            "valid",
+            "invalid"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "OutputValidation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "classification_calls": {
+      "items": {
+        "$ref": "#/$defs/CallOutcome"
+      },
+      "maxItems": 2,
+      "title": "Classification Calls",
+      "type": "array"
+    },
+    "classifier_source": {
+      "anyOf": [
+        {
+          "enum": [
+            "jev",
+            "flash"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Classifier Source"
+    },
+    "duration_ms": {
+      "default": 0,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "fallback_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fallback Reason"
+    },
+    "usage_complete": {
+      "default": false,
+      "title": "Usage Complete",
+      "type": "boolean"
+    }
+  },
+  "title": "RoutingMetrics",
+  "type": "object"
+}

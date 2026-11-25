@@ -53,6 +53,108 @@
         "title": "AvailableModels",
         "type": "object"
       },
+      "CallOutcome": {
+        "additionalProperties": false,
+        "properties": {
+          "call_id": {
+            "format": "uuid",
+            "title": "Call Id",
+            "type": "string"
+          },
+          "config_version": {
+            "title": "Config Version",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finish Reason"
+          },
+          "provider_id": {
+            "format": "uuid",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "requested_model": {
+            "title": "Requested Model",
+            "type": "string"
+          },
+          "response_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Model"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "failed",
+              "canceled",
+              "incomplete"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "upstream_outcome_unknown": {
+            "default": false,
+            "title": "Upstream Outcome Unknown",
+            "type": "boolean"
+          },
+          "upstream_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upstream Request Id"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ModelUsage"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/OutputValidation"
+          }
+        },
+        "required": [
+          "call_id",
+          "provider_id",
+          "config_version",
+          "status",
+          "duration_ms",
+          "requested_model"
+        ],
+        "title": "CallOutcome",
+        "type": "object"
+      },
       "CallRecordView": {
         "additionalProperties": false,
         "properties": {
@@ -463,15 +565,31 @@
           "input": {
             "$ref": "#/components/schemas/GenerateInput"
           },
+          "main_model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MainModelSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "provider_id": {
-            "format": "uuid",
-            "title": "Provider Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Id"
           }
         },
         "required": [
           "call_id",
-          "provider_id",
           "input"
         ],
         "title": "ChatCallInput",
@@ -961,6 +1079,57 @@
         "title": "Health",
         "type": "object"
       },
+      "Intent": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "maxLength": 80,
+            "title": "Category Id",
+            "type": "string"
+          },
+          "scene_id": {
+            "maxLength": 20,
+            "title": "Scene Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category_id",
+          "scene_id"
+        ],
+        "title": "Intent",
+        "type": "object"
+      },
+      "MainModelSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "fixed",
+              "auto"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "provider_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Id"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "MainModelSelection",
+        "type": "object"
+      },
       "ModelCapabilities": {
         "additionalProperties": false,
         "properties": {
@@ -1089,6 +1258,50 @@
           "created_at"
         ],
         "title": "ModelChangeView",
+        "type": "object"
+      },
+      "ModelRoute": {
+        "additionalProperties": false,
+        "properties": {
+          "dictionary_version": {
+            "title": "Dictionary Version",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "fixed",
+              "auto"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider_id": {
+            "format": "uuid",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "routing_version": {
+            "title": "Routing Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "provider_id",
+          "model",
+          "reason",
+          "dictionary_version",
+          "routing_version"
+        ],
+        "title": "ModelRoute",
         "type": "object"
       },
       "ModelUsage": {
@@ -1500,6 +1713,183 @@
         "title": "ProviderView",
         "type": "object"
       },
+      "RoutedCallResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "call_id": {
+            "format": "uuid",
+            "title": "Call Id",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "features": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingFeatures"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Intent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/RoutingMetrics"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelRoute"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "failed",
+              "canceled",
+              "incomplete"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "call_id",
+          "status"
+        ],
+        "title": "RoutedCallResponse",
+        "type": "object"
+      },
+      "RoutingFeatures": {
+        "additionalProperties": false,
+        "properties": {
+          "difficulty": {
+            "enum": [
+              "L1",
+              "L2",
+              "L3",
+              "undetermined"
+            ],
+            "title": "Difficulty",
+            "type": "string"
+          },
+          "required_capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Required Capabilities",
+            "type": "array"
+          },
+          "response_mode": {
+            "enum": [
+              "answer",
+              "clarify",
+              "refuse",
+              "handoff"
+            ],
+            "title": "Response Mode",
+            "type": "string"
+          },
+          "task_type": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Task Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_type",
+          "difficulty",
+          "response_mode"
+        ],
+        "title": "RoutingFeatures",
+        "type": "object"
+      },
+      "RoutingMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "classification_calls": {
+            "items": {
+              "$ref": "#/components/schemas/CallOutcome"
+            },
+            "maxItems": 2,
+            "title": "Classification Calls",
+            "type": "array"
+          },
+          "classifier_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "jev",
+                  "flash"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classifier Source"
+          },
+          "duration_ms": {
+            "default": 0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "fallback_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback Reason"
+          },
+          "usage_complete": {
+            "default": false,
+            "title": "Usage Complete",
+            "type": "boolean"
+          }
+        },
+        "title": "RoutingMetrics",
+        "type": "object"
+      },
       "SavedProvider": {
         "additionalProperties": false,
         "properties": {
@@ -1835,7 +2225,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CallResponse"
+                  "$ref": "#/components/schemas/RoutedCallResponse"
                 }
               }
             },

@@ -11,12 +11,26 @@ import {
 import { ArrowUp, Paperclip, Plus, RotateCcw, Square, Trash2 } from "lucide-react";
 import { useDocumentSession } from "./shell/session-boundary";
 import type { PagePayload } from "@/contracts/page";
-import type { AvailableModel, AvailableModels, ModelEvent } from "@/contracts/models";
+import type {
+  AvailableModel,
+  AvailableModels,
+  Intent,
+  ModelRoute,
+  RoutedModelEvent,
+  RoutingFeatures,
+  RoutingMetrics,
+} from "@/contracts/models";
+import { categoryLabel, sceneLabel } from "@/lib/routing-labels";
+
+const AUTO_MODEL = "auto";
+const FALLBACK_NOTICE = "正在使用备用分类模型识别任务。";
+const NOT_CLASSIFIED = "意图识别尚未执行。";
 
 const ERROR_LABEL: Record<string, string> = {
   model_authentication_failed: "模型认证失败，请检查 API Key 与接入权限。",
   model_rate_limited: "调用过于频繁，请稍后重试。",
   model_timeout: "本次调用已超时，请检查服务状态或稍后重试。",
+  model_unavailable: "当前模型已不可用，请重新选择。",
   model_unavailable_upstream: "供应商暂时不可用，请稍后重试。",
   stream_interrupted: "输出未完成。你可以检查当前结果后重新发送。",
   output_truncated: "输出被截断，结果未完整返回。",
@@ -24,11 +38,14 @@ const ERROR_LABEL: Record<string, string> = {
   empty_output: "模型没有返回内容。",
   invalid_json: "输出不是有效 JSON。",
   schema_validation_failed: "输出不符合指定结构。",
-  capability_not_supported: "当前模型不支持所选能力或参数组合。",
+  capability_not_supported: "当前模型不支持本任务要求的能力，请选择其他模型。",
   provider_protocol_error: "供应商返回了无法识别的响应。",
   validation_failed: "请检查输入内容。",
   internal_error: "调用未能完成，请稍后重试。",
   record_write_failed: "调用结果可能已产生，请按调用 ID 核对。",
+  intent_unavailable: "意图识别暂时不可用，请稍后重试。",
+  intent_invalid: "意图识别结果无效，请调整问题后重试。",
+  route_binding_missing: "当前没有满足任务要求的可用模型。",
 };
 
 type Turn = {
@@ -39,6 +56,11 @@ type Turn = {
   status?: "running" | "completed" | "failed" | "canceled" | "incomplete";
   error?: string;
   usage?: { input_tokens?: number | null; output_tokens?: number | null } | null;
+  inferenceMs?: number | null;
+  intent?: Intent | null;
+  features?: RoutingFeatures | null;
+  routing?: ModelRoute | null;
+  metrics?: RoutingMetrics | null;
 };
 
 const suggestions = ["上周经营表现", "解释指标变化", "预测未来销量", "分析一份文件"];
@@ -49,6 +71,16 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function usageText(usage?: { input_tokens?: number | null; output_tokens?: number | null } | null) {
+  if (!usage) return "未知";
+  return `输入 ${usage.input_tokens ?? "未知"} · 输出 ${usage.output_tokens ?? "未知"}`;
+}
+
+function classifierText(metrics?: RoutingMetrics | null): string {
+  if (!metrics?.classifier_source) return "未执行";
+  return metrics.classifier_source === "jev" ? "JEV 主路" : "Flash 兜底";
+}
+
 export function AnalysisComposer({ payload }: { payload: PagePayload }) {
   const api = useDocumentSession();
   const input = useRef<HTMLTextAreaElement>(null);
@@ -56,7 +88,7 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
   const [models, setModels] = useState<AvailableModels | null>(null);
   const [modelsLoading, setModelsLoading] = useState(true);
   const [modelsError, setModelsError] = useState("");
-  const [modelId, setModelId] = useState("");
+  const [modelId, setModelId] = useState(AUTO_MODEL);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [contextStart, setContextStart] = useState(0);
   const [question, setQuestion] = useState("");
@@ -69,6 +101,7 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
   const composing = useRef(false);
   const canInvoke = payload.session.capabilities.includes("models.invoke");
   const scope = payload.session.scope;
+  const auto = modelId === AUTO_MODEL;
 
   const loadModels = useCallback(async () => {
     setModelsLoading(true);
@@ -97,8 +130,8 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
   );
 
   const selected: AvailableModel | null = useMemo(
-    () => models?.items.find((item) => item.id === modelId) ?? null,
-    [modelId, models],
+    () => (auto ? null : (models?.items.find((item) => item.id === modelId) ?? null)),
+    [auto, modelId, models],
   );
   const running = sending;
 
@@ -106,14 +139,14 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
     if (value === modelId) return;
     if (
       turns.length > contextStart &&
-      !window.confirm("更换主模型将开始新对话，当前结果保留在本页。")
+      !window.confirm("切换模型或路由方式将开启新的对话上下文，已有内容仍保留在当前页面。继续？")
     )
       return;
     setError("");
     setModelId(value);
     if (turns.length > contextStart) {
       setContextStart(turns.length);
-      setNotice("已更换主模型，新的消息将使用所选模型重新开始上下文。");
+      setNotice("已切换主模型或路由方式，新的消息将重新开始上下文。");
     } else {
       setNotice("");
     }
@@ -149,7 +182,7 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
   }
 
   async function send() {
-    if (running || !selected) return;
+    if (running || (!selected && !auto)) return;
     const content = question.trim();
     if (!content) return;
     if (files.length) {
@@ -160,20 +193,21 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
     setNotice("");
     const history = turns
       .slice(contextStart)
-      .filter((turn) => turn.text.trim())
+      .filter((turn) => turn.text.trim() && (turn.role === "user" || turn.status === "completed"))
       .map((turn) => ({ role: turn.role, content: turn.text }));
     const messages = [...history, { role: "user" as const, content }];
     const assistantId = crypto.randomUUID();
     const callId = crypto.randomUUID();
-    const supportsThinking = selected.capabilities.thinking.state === "supported";
+    const supportsThinking = !auto && selected?.capabilities.thinking.state === "supported";
+    const alias = auto ? "系统优化" : (selected?.alias ?? "模型");
     setTurns((current) => [
       ...current,
       { id: crypto.randomUUID(), role: "user", text: content },
-      { id: assistantId, role: "assistant", text: "", alias: selected.alias, status: "running" },
+      { id: assistantId, role: "assistant", text: "", alias, status: "running" },
     ]);
     setQuestion("");
     setSending(true);
-    setAnnouncement(`正在调用 ${selected.alias}…`);
+    setAnnouncement("正在识别任务…");
     const update = (patch: Partial<Turn>) =>
       setTurns((current) =>
         current.map((turn) => (turn.id === assistantId ? { ...turn, ...patch } : turn)),
@@ -183,7 +217,9 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
     if (scope.workspaceId) params.set("workspaceId", scope.workspaceId);
     const body = {
       call_id: callId,
-      provider_id: selected.id,
+      main_model: auto
+        ? { mode: "auto" as const }
+        : { mode: "fixed" as const, provider_id: selected?.id },
       input: {
         messages,
         stream: true,
@@ -194,28 +230,59 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
     };
     let received = "";
     try {
-      const handle = api.modelRequest(
+      const handle = api.modelRequest<RoutedModelEvent>(
         `models/calls?${params}`,
         body,
         callId,
-        (event: ModelEvent) => {
+        (event) => {
+          if (event.type === "start") {
+            setAnnouncement("正在识别任务…");
+          }
+          if (event.type === "classification_status") {
+            if (event.stage === "flash") {
+              setNotice(FALLBACK_NOTICE);
+              setAnnouncement(FALLBACK_NOTICE);
+            } else {
+              setAnnouncement("正在识别任务…");
+            }
+          }
+          if (event.type === "route_selected") {
+            setNotice("");
+            update({
+              alias: event.routing.model,
+              intent: event.intent,
+              features: event.features,
+              routing: event.routing,
+            });
+            setAnnouncement(
+              `任务已识别：${categoryLabel(event.intent.category_id)} / ${sceneLabel(
+                event.intent.scene_id,
+              )}。`,
+            );
+          }
           if (event.type === "text_delta") {
             received += event.text;
             update({ text: received });
           }
-          if (event.type === "start") setAnnouncement(`正在调用 ${selected.alias}…`);
           if (event.type === "reasoning_meta")
             setAnnouncement("模型已启用 Thinking，仅展示公开执行信息。");
           if (event.type === "final") {
+            const result = event.result;
             update({
               status: event.status,
+              text: received || result?.text || "",
               error: event.error_code
                 ? (ERROR_LABEL[event.error_code] ?? "调用未能完成。")
                 : undefined,
-              usage: event.usage,
+              usage: result?.usage ?? null,
+              inferenceMs: result?.duration_ms ?? null,
+              intent: event.intent ?? null,
+              features: event.features ?? null,
+              routing: event.routing ?? null,
+              metrics: event.metrics ?? null,
             });
             if (event.status === "incomplete")
-              setNotice("输出未完成。你可以检查当前结果后重新发送。");
+              setNotice("本次生成已中断，当前内容尚未完成。你可以重新发起请求。");
             if (event.status === "failed" && event.error_code)
               setError(ERROR_LABEL[event.error_code] ?? "调用未能完成，请稍后重试。");
             setAnnouncement(event.status === "completed" ? "本轮回答已完成。" : "本轮调用已结束。");
@@ -251,14 +318,15 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
     if (!sending) void send();
   }
 
-  const sendDisabled = sending || !selected || !canInvoke || !question.trim() || files.length > 0;
+  const sendDisabled =
+    sending || !canInvoke || (!selected && !auto) || !question.trim() || files.length > 0;
   const disabledReason = !canInvoke
     ? "你暂无使用模型的权限，请联系租户管理员。"
-    : modelsLoading
+    : !auto && modelsLoading
       ? "正在加载可选模型…"
-      : !models?.items.length
+      : !auto && !models?.items.length
         ? "暂无可用模型，请联系管理员。"
-        : !selected
+        : !auto && !selected
           ? "请选择主模型"
           : files.length
             ? "附件暂不支持发送给模型，请移除后发送文字。"
@@ -315,7 +383,7 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
             onChange={(event) => selectModel(event.target.value)}
             disabled={running || modelsLoading}
           >
-            <option value="">{modelsLoading ? "正在加载模型…" : "请选择主模型"}</option>
+            <option value={AUTO_MODEL}>系统优化</option>
             {models?.items.map((model) => (
               <option key={model.id} value={model.id}>
                 {model.alias} · {model.api_model} · {KIND_LABEL(model.kind)}
@@ -340,7 +408,9 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
         >
           <Plus size={20} />
         </button>
-        <span className="composer-scope">{selected ? KIND_LABEL(selected.kind) : "生成模型"}</span>
+        <span className="composer-scope">
+          {auto ? "系统优化" : selected ? KIND_LABEL(selected.kind) : "生成模型"}
+        </span>
         <button
           type="button"
           className={running ? "composer-send stop" : "composer-send"}
@@ -353,7 +423,11 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
         </button>
       </div>
       {!running && disabledReason && <p className="composer-hint">{disabledReason}</p>}
-      {running && <p className="composer-hint">正在调用 {selected?.alias}… 可随时停止。</p>}
+      {running && (
+        <p className="composer-hint">
+          正在调用 {auto ? "系统优化" : selected?.alias}… 可随时停止。
+        </p>
+      )}
     </div>
   );
 
@@ -375,7 +449,7 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
           <h2>
             每个好问题，<em>都有迹可循。</em>
           </h2>
-          <p>选择主模型后发送问题，获得所选模型的真实回答。</p>
+          <p>选择系统优化或指定主模型后发送问题，系统先识别任务再完成回答。</p>
         </div>
       )}
       {turns.length > 0 && (
@@ -401,6 +475,17 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
                     }
                   </span>
                 </header>
+                {turn.intent ? (
+                  <p className="chat-classification muted">
+                    分类：{categoryLabel(turn.intent.category_id)} /{" "}
+                    {sceneLabel(turn.intent.scene_id)}
+                    {turn.features
+                      ? ` · 任务类型 ${turn.features.task_type} · 难度 ${turn.features.difficulty}`
+                      : ""}
+                  </p>
+                ) : turn.status === "running" ? (
+                  <p className="chat-classification muted">{NOT_CLASSIFIED}</p>
+                ) : null}
                 <div className="chat-bubble">
                   {turn.text ||
                     (turn.status === "running" ? <span className="typing">…</span> : null)}
@@ -415,6 +500,87 @@ export function AnalysisComposer({ payload }: { payload: PagePayload }) {
                     输入 {turn.usage.input_tokens ?? "未知"} · 输出{" "}
                     {turn.usage.output_tokens ?? "未知"}
                   </p>
+                )}
+                {(turn.routing || turn.intent) && (
+                  <details className="chat-details">
+                    <summary>查看选择原因</summary>
+                    <dl className="chat-routing">
+                      {turn.intent && (
+                        <div>
+                          <dt>分类</dt>
+                          <dd>
+                            {categoryLabel(turn.intent.category_id)} /{" "}
+                            {sceneLabel(turn.intent.scene_id)}{" "}
+                            <span className="muted">
+                              （{turn.intent.category_id} / {turn.intent.scene_id}）
+                            </span>
+                          </dd>
+                        </div>
+                      )}
+                      {turn.features && (
+                        <div>
+                          <dt>字典特征</dt>
+                          <dd>
+                            任务类型 {turn.features.task_type} · 难度 {turn.features.difficulty} ·
+                            响应方式 {turn.features.response_mode}
+                            {turn.features.required_capabilities?.length
+                              ? ` · 必需能力 ${turn.features.required_capabilities.join("、")}`
+                              : ""}
+                          </dd>
+                        </div>
+                      )}
+                      {turn.routing && (
+                        <>
+                          <div>
+                            <dt>本次推理</dt>
+                            <dd>
+                              {turn.routing.model} · Provider {turn.routing.provider_id}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>选模规则</dt>
+                            <dd>
+                              {turn.routing.reason} ·{" "}
+                              {turn.routing.mode === "auto" ? "系统优化" : "指定模型"}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>版本</dt>
+                            <dd>
+                              字典 {turn.routing.dictionary_version} · 契约{" "}
+                              {turn.routing.routing_version}
+                            </dd>
+                          </div>
+                        </>
+                      )}
+                      <div>
+                        <dt>分类来源</dt>
+                        <dd>
+                          {classifierText(turn.metrics)}
+                          {turn.metrics?.fallback_reason
+                            ? ` · 兜底原因 ${turn.metrics.fallback_reason}`
+                            : ""}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>分项消耗</dt>
+                        <dd>
+                          分类{" "}
+                          {turn.metrics?.classification_calls?.length
+                            ? turn.metrics.classification_calls
+                                .map(
+                                  (call, index) =>
+                                    `#${index + 1} ${call.status}（${usageText(call.usage)}，${call.duration_ms}ms）`,
+                                )
+                                .join("；")
+                            : "未执行"}{" "}
+                          · 推理 {usageText(turn.usage)}（{turn.inferenceMs ?? "未知"}ms）· 总耗时{" "}
+                          {turn.metrics?.duration_ms ?? 0}ms
+                          {turn.metrics?.usage_complete ? "" : " · 部分用量未知"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </details>
                 )}
               </article>
             ),

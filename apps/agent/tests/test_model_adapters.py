@@ -342,6 +342,7 @@ def test_decision_adapter_posts_systemone_and_normalizes_answers() -> None:
             200,
             json={
                 "model": "jev-latest-2026",
+                "request_id": "req_body",
                 "answers": {
                     "pick": {
                         "type": "choice",
@@ -368,6 +369,32 @@ def test_decision_adapter_posts_systemone_and_normalizes_answers() -> None:
     assert call_session.progress.normal_eof is True
     assert call_session.progress.usage.input_tokens == 31
     assert call_session.progress.usage.output_tokens == 4
+    assert call_session.progress.upstream_request_id == "req_body"
+
+
+def test_decision_adapter_normalizes_rounded_probabilities() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "answers": {
+                    "pick": {
+                        "type": "choice",
+                        "choice": "a",
+                        "probabilities": {"a": 0.55, "b": 0.44},
+                        "confidence": 0.5,
+                    }
+                }
+            },
+        )
+
+    adapter = SystemOneDecisionAdapter(transport=httpx.MockTransport(handler))
+    execution = decision_request(decision_model(), decision_input())
+    output = asyncio.run(adapter.invoke(execution, session(execution, [])))
+    assert isinstance(output, DecisionOutput)
+    probabilities = output.answers["pick"].probabilities or {}
+    assert abs(sum(probabilities.values()) - 1.0) < 1e-9
+    assert probabilities["a"] == pytest.approx(0.55 / 0.99)
 
 
 def test_decision_adapter_rejects_incomplete_probabilities() -> None:

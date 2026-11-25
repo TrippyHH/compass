@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from compass_agent.models.errors import ModelError
 from compass_agent.models.service import ModelService, PreparedExecution
+from compass_agent.routing.service import RoutingService
 from compass_agent.schemas import (
     AvailableModels,
     CallRecordView,
@@ -28,6 +29,9 @@ from compass_agent.schemas import (
     ProviderPage,
     ProviderPatch,
     ProviderView,
+    RoutedCallResponse,
+    RoutingFinalEvent,
+    RoutingStartEvent,
     SavedProvider,
     StartEvent,
     TestCallInput,
@@ -49,6 +53,12 @@ _STATUS = {
     "model_unavailable": 503,
     "unavailable": 503,
     "unauthenticated": 401,
+    "model_timeout": 503,
+    "capability_not_supported": 422,
+    "intent_unavailable": 503,
+    "intent_invalid": 503,
+    "route_binding_missing": 503,
+    "record_write_failed": 503,
 }
 
 _SAFE_MESSAGES = {
@@ -61,6 +71,12 @@ _SAFE_MESSAGES = {
     "unavailable": "模型服务暂时不可用。",
     "unauthenticated": "服务身份校验失败。",
     "validation_failed": "请检查模型配置或调用参数。",
+    "model_timeout": "本次调用已超时，请稍后重试。",
+    "capability_not_supported": "当前模型不支持本任务要求的能力，请选择其他模型。",
+    "intent_unavailable": "意图识别暂时不可用，请稍后重试。",
+    "intent_invalid": "意图识别结果无效，请调整问题后重试。",
+    "route_binding_missing": "当前没有满足任务要求的可用模型。",
+    "record_write_failed": "调用结果可能已产生，请按调用 ID 核对。",
 }
 
 
@@ -374,18 +390,68 @@ async def test_provider(
     return await service.execute(prepared, disconnect=lambda: _wait_disconnect(request))
 
 
-@router.post("/calls", response_model=CallResponse)
+def _routing_final(response: RoutedCallResponse) -> RoutingFinalEvent:
+    return RoutingFinalEvent.model_validate({**response.model_dump(), "type": "final"})
+
+
+def _routing_failed(call_id: UUID, code: str) -> RoutingFinalEvent:
+    return RoutingFinalEvent(call_id=call_id, status="failed", error_code=code)
+
+
+async def _routing_stream(
+    payload: ChatCallInput, routing: RoutingService, context: TrustedContext
+) -> AsyncIterator[str]:
+    queue: asyncio.Queue[Any] = asyncio.Queue(maxsize=16)
+
+    async def emit(event: Any) -> None:
+        await queue.put(event)
+
+    async def produce() -> None:
+        try:
+            response = await routing.run(payload, context, emit=emit)
+            await queue.put(_routing_final(response))
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            await queue.put(_routing_failed(payload.call_id, "internal_error"))
+        finally:
+            await queue.put(None)
+
+    task = asyncio.create_task(produce())
+    try:
+        yield _sse(RoutingStartEvent(call_id=payload.call_id))
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            yield _sse(item)
+            if getattr(item, "type", "") == "final":
+                break
+    finally:
+        if not task.done():
+            task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
+@router.post("/calls", response_model=RoutedCallResponse)
 async def chat_call(
     request: Request,
     payload: ChatCallInput,
     context: TrustedContext = Depends(tenant_chat),
-) -> CallResponse | StreamingResponse:
+) -> RoutedCallResponse | StreamingResponse:
     _check_body(request)
-    service = _service(request)
-    prepared = await service.prepare_chat(payload, context)
+    routing = RoutingService(_service(request))
     if payload.input.stream:
-        return _streaming_response(prepared, service, request)
-    return await service.execute(prepared, disconnect=lambda: _wait_disconnect(request))
+        return StreamingResponse(
+            _routing_stream(payload, routing, context),
+            media_type="text/event-stream",
+            headers={
+                **_headers(),
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
+    return await routing.run(payload, context)
 
 
 @router.get("/calls/{call_id}", response_model=CallRecordView)

@@ -10,8 +10,10 @@ from compass_agent.main import app
 from compass_agent.models.service import ModelService
 from compass_agent.schemas import (
     DecisionAnswer,
+    OutputValidation,
     TextDeltaEvent,
 )
+from compass_agent.settings import get_settings
 from fastapi.testclient import TestClient
 
 pytest.importorskip("cryptography")
@@ -26,6 +28,13 @@ class StreamingAdapter:
     async def invoke(self, request, session) -> GenerationOutput:
         self.calls += 1
         session.resources.mark_sent()
+        if getattr(request.input, "output_format", "text") == "schema":
+            text = '{"category_id":"business_channel","scene_id":"SC-02"}'
+            session.progress.output = GenerationOutput(text=text)
+            session.progress.validation = OutputValidation(status="valid", mode="schema")
+            session.progress.finish_reason = "stop"
+            session.progress.normal_eof = True
+            return GenerationOutput(text=text)
         text = ""
         for chunk in ("你", "好"):
             text += chunk
@@ -98,6 +107,27 @@ def tenant_headers(purpose: Literal["manage", "test", "chat", "module_read"] = "
             purpose=purpose,
         )
     )
+
+
+def configure_flash(monkeypatch, provider_id: str) -> None:
+    monkeypatch.setenv("COMPASS_ROUTING_MODE", "flash_only")
+    monkeypatch.setenv("COMPASS_ROUTING_FLASH_PROVIDER_ID", provider_id)
+    get_settings.cache_clear()
+
+
+def flash_payload(**overrides) -> dict:
+    values = {
+        "operation_id": str(uuid4()),
+        "catalog_id": "deepseek/deepseek-flash",
+        "api_model": "deepseek-flash",
+        "alias": "Flash",
+        "base_url": "https://api.deepseek.com",
+        "api_key": "sk-flash",
+        "enabled": True,
+        "chat_visible": True,
+    }
+    values.update(overrides)
+    return values
 
 
 def provider_payload(**overrides) -> dict:
@@ -211,10 +241,11 @@ def test_available_models_for_tenant(client) -> None:
     assert hidden["provider_id"] not in ids
 
 
-def test_chat_json_response_and_record(client) -> None:
+def test_chat_json_response_and_record(client, monkeypatch) -> None:
     headers = platform_headers()
     tenant = tenant_headers()
-    created = client.post("/v1/models/providers", headers=headers, json=provider_payload()).json()
+    created = client.post("/v1/models/providers", headers=headers, json=flash_payload()).json()
+    configure_flash(monkeypatch, created["provider_id"])
     call_id = str(uuid4())
     response = client.post(
         "/v1/models/calls",
@@ -223,7 +254,7 @@ def test_chat_json_response_and_record(client) -> None:
             "call_id": call_id,
             "provider_id": created["provider_id"],
             "input": {
-                "messages": [{"role": "user", "content": "你好"}],
+                "messages": [{"role": "user", "content": "比较一下昨天和前天的渠道汇总"}],
                 "stream": False,
             },
         },
@@ -231,15 +262,23 @@ def test_chat_json_response_and_record(client) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "completed"
-    assert body["text"] == "你好"
+    assert body["intent"] == {"category_id": "business_channel", "scene_id": "SC-02"}
+    assert body["features"]["difficulty"] == "L1"
+    assert body["routing"]["mode"] == "fixed"
+    assert body["routing"]["provider_id"] == created["provider_id"]
+    assert body["routing"]["reason"] == "user_fixed_main_model"
+    assert body["result"]["text"] == "你好"
+    assert body["metrics"]["classifier_source"] == "flash"
+    assert len(body["metrics"]["classification_calls"]) == 1
     record = client.get(f"/v1/models/calls/{call_id}", headers=tenant)
     assert record.status_code == 200
     assert record.json()["purpose"] == "chat"
 
 
-def test_chat_stream_emits_start_deltas_and_single_final(client) -> None:
+def test_chat_stream_emits_start_classification_route_and_single_final(client, monkeypatch) -> None:
     headers = platform_headers()
-    created = client.post("/v1/models/providers", headers=headers, json=provider_payload()).json()
+    created = client.post("/v1/models/providers", headers=headers, json=flash_payload()).json()
+    configure_flash(monkeypatch, created["provider_id"])
     call_id = str(uuid4())
     events: list[dict] = []
     with client.stream(
@@ -249,7 +288,10 @@ def test_chat_stream_emits_start_deltas_and_single_final(client) -> None:
         json={
             "call_id": call_id,
             "provider_id": created["provider_id"],
-            "input": {"messages": [{"role": "user", "content": "你好"}], "stream": True},
+            "input": {
+                "messages": [{"role": "user", "content": "比较两周渠道汇总"}],
+                "stream": True,
+            },
         },
     ) as response:
         assert response.status_code == 200
@@ -261,14 +303,46 @@ def test_chat_stream_emits_start_deltas_and_single_final(client) -> None:
             events.append(json.loads(line[6:]))
     types = [event["type"] for event in events]
     assert types[0] == "start"
+    assert "classification_status" in types
+    assert "route_selected" in types
     assert types[-1] == "final"
     assert types.count("final") == 1
     deltas = [event for event in events if event["type"] == "text_delta"]
     assert "".join(event["text"] for event in deltas) == "你好"
+    route = next(event for event in events if event["type"] == "route_selected")
+    assert route["intent"]["scene_id"] == "SC-02"
+    assert route["routing"]["provider_id"] == created["provider_id"]
     final = events[-1]
     assert final["status"] == "completed"
     assert final["call_id"] == call_id
-    assert "text" not in final
+    assert final["result"]["text"] == "你好"
+    assert final["metrics"]["classifier_source"] == "flash"
+
+
+def test_chat_selection_requires_exactly_one_of_provider_and_main_model(client) -> None:
+    tenant = tenant_headers()
+    body = {
+        "call_id": str(uuid4()),
+        "input": {"messages": [{"role": "user", "content": "比较两周渠道汇总"}]},
+    }
+    missing = client.post("/v1/models/calls", headers=tenant, json=body)
+    assert missing.status_code == 422
+    both = client.post(
+        "/v1/models/calls",
+        headers=tenant,
+        json={
+            **body,
+            "provider_id": str(uuid4()),
+            "main_model": {"mode": "fixed", "provider_id": str(uuid4())},
+        },
+    )
+    assert both.status_code == 422
+    mismatch = client.post(
+        "/v1/models/calls",
+        headers=tenant,
+        json={**body, "main_model": {"mode": "auto", "provider_id": str(uuid4())}},
+    )
+    assert mismatch.status_code == 422
 
 
 def test_decision_test_call(client, adapters) -> None:

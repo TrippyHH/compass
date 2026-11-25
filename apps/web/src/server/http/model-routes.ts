@@ -2,6 +2,7 @@ import type { TransactionMode } from "../platform/db";
 import type { WebUseCases } from "../composition";
 import type { AgentTrustedContext } from "../../contracts/models";
 import { modelAgentClient, relayModelEvents } from "../model-agent-client";
+import { assertFixedRoute } from "../../lib/model-contracts";
 import { reject } from "../platform/errors";
 import { privateHeaders } from "./responses";
 import { jsonResponse } from "./responses";
@@ -84,7 +85,7 @@ export async function handleModelRoute(input: ModelRouteInput): Promise<Response
     }
     if (path[1] === "calls") {
       if (path.length === 2 && method === "POST") {
-        const value = dto.chatCallInput.parse(body);
+        const value = dto.normalizeChatCall(dto.chatCallRequest.parse(body));
         const scope = tenantScope(query);
         const authorized = await authorize(
           execute,
@@ -98,13 +99,21 @@ export async function handleModelRoute(input: ModelRouteInput): Promise<Response
             value,
             signalFor(request),
           );
-          return streamResponse(relayModelEvents(upstream, value.call_id), authorized.revision);
+          return streamResponse(
+            relayModelEvents(upstream, value.call_id, true, value.main_model),
+            authorized.revision,
+          );
         }
         const response = await modelAgentClient.chatCall(
           authorized.context,
           value,
           signalFor(request),
         );
+        try {
+          assertFixedRoute(response, value.main_model);
+        } catch {
+          reject("unavailable", "模型服务响应不符合契约。");
+        }
         return jsonResponse(response, authorized.revision);
       }
       if (path.length === 3 && method === "GET") {

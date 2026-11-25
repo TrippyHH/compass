@@ -2,15 +2,15 @@
 
 `models/` 管模型接入配置、凭据、调用准入、快照、占位与元记录；`llm/` 管单次执行。本包不反向进入 Runtime 生命周期。
 
-| 模块            | 责任                                                          |
-| --------------- | ------------------------------------------------------------- |
-| `__init__.py`   | 无副作用的 `PreparedCall` 交接类型                            |
-| `entities.py`   | `model_provider` / `model_change` / `model_call` ORM          |
-| `repository.py` | 短事务、乐观锁、幂等操作、配置快照、占位与终态条件更新        |
-| `service.py`    | 平台/租户准入、能力检查、任务所有权、执行与结果映射、记录查询 |
-| `validation.py` | 端点白名单、别名与连接参数校验                                |
-| `secrets.py`    | 凭据 Fernet 信封与窄 `ModelContinuationCodec`                 |
-| `errors.py`     | 应用错误码，由 HTTP 层映射固定安全文案                        |
+| 模块            | 责任                                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------------------- |
+| `__init__.py`   | 无副作用的 `PreparedCall` / `RoutingGrant` 交接类型                                                       |
+| `entities.py`   | `model_provider` / `model_change` / `model_call` ORM                                                      |
+| `repository.py` | 短事务、乐观锁、幂等操作、配置快照、占位与终态条件更新                                                    |
+| `service.py`    | 平台/租户准入、能力检查、任务所有权、执行与结果映射、记录查询；`prepare`/`run` 供路由阶段使用并保留父时限 |
+| `validation.py` | 端点白名单、别名与连接参数校验                                                                            |
+| `secrets.py`    | 凭据 Fernet 信封与窄 `ModelContinuationCodec`                                                             |
+| `errors.py`     | 应用错误码，由 HTTP 层映射固定安全文案                                                                    |
 
 约束：
 
@@ -19,3 +19,5 @@
 - 调用先提交 running 占位再出站；终态只更新 `WHERE status='running'` 一次。记录写入未获确认时公开 `record_write_failed`，不重发模型请求。
 - 凭据与连接参数只写不回显；读取、审计、错误与浏览器响应不包含原文。调用表不保存 Prompt、正文、决策内容或 Thinking。
 - 平台测试上下文不构造虚假租户；Chat 必须使用有效租户/空间，租户不能读取平台测试内容。
+- 分类 Provider 由进程内 `RoutingGrant` 授权：校验 actor、scope、物理 call_id、Provider 与阶段；授予 `enabled` 而非 `chat_visible`，只用于内部 JEV/Flash 分类，浏览器无法提交或扩大该授权。
+- 路由阶段的 `prepare` 接收父/阶段 `deadline_at`，父时限不因分类或推理重置；分类物理 ID 由整轮 `call_id` 派生。

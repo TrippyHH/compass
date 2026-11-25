@@ -11,6 +11,12 @@ ModelErrorCode = Literal[
     "chat_model_not_supported",
     "model_unavailable",
     "unavailable",
+    "model_timeout",
+    "capability_not_supported",
+    "intent_unavailable",
+    "intent_invalid",
+    "route_binding_missing",
+    "record_write_failed",
 ]
 
 

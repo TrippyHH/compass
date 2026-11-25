@@ -1,0 +1,46 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "difficulty": {
+      "enum": [
+        "L1",
+        "L2",
+        "L3",
+        "undetermined"
+      ],
+      "title": "Difficulty",
+      "type": "string"
+    },
+    "required_capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Required Capabilities",
+      "type": "array"
+    },
+    "response_mode": {
+      "enum": [
+        "answer",
+        "clarify",
+        "refuse",
+        "handoff"
+      ],
+      "title": "Response Mode",
+      "type": "string"
+    },
+    "task_type": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Task Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "task_type",
+    "difficulty",
+    "response_mode"
+  ],
+  "title": "RoutingFeatures",
+  "type": "object"
+}

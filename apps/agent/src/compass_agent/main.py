@@ -18,6 +18,7 @@ from compass_agent.model_api import router as model_router
 from compass_agent.models.errors import ModelError
 from compass_agent.models.secrets import ModelContinuationCodec
 from compass_agent.models.service import ModelService
+from compass_agent.routing.dictionary import catalog as routing_catalog
 from compass_agent.schemas import DemoOverview, Health
 from compass_agent.settings import get_settings
 
@@ -25,8 +26,10 @@ app = FastAPI(title="Compass Agent", version="0.1.0", description="Commerce anal
 
 
 def build_model_service() -> ModelService:
-    # Build the read-only catalog once at startup so no call pays the SDK import.
+    # Build the read-only catalogs once at startup so no call pays the import cost
+    # and an invalid routing dictionary fails deployment instead of a request.
     catalog.records()
+    routing_catalog()
     codec = ModelContinuationCodec()
     runtime = Runtime(
         {

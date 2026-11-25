@@ -2066,6 +2066,34 @@ dd {
 .chat-usage {
   font-size: 11px;
 }
+.chat-classification {
+  font-size: 11px;
+}
+.chat-details {
+  font-size: 12px;
+}
+.chat-details summary {
+  cursor: pointer;
+  color: var(--primary);
+  width: fit-content;
+}
+.chat-routing {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0 0;
+}
+.chat-routing div {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 8px;
+}
+.chat-routing dt {
+  color: var(--muted);
+}
+.chat-routing dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .chat-main .analysis-composer {
   margin-top: 8px;
 }

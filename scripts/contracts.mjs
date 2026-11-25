@@ -19,6 +19,12 @@ const schemaFiles = [
   "model-provider-page.schema.json",
   "model-provider-view.schema.json",
   "model-saved-provider.schema.json",
+  "model-intent.schema.json",
+  "model-routing-features.schema.json",
+  "model-route.schema.json",
+  "model-routing-metrics.schema.json",
+  "model-routed-call-response.schema.json",
+  "model-routed-event.schema.json",
 ];
 function run(cmd, args) {
   const options = { cwd: root, stdio: "inherit" };
